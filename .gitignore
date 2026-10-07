@@ -1,0 +1,21 @@
+# Gradle / Java build artifacts
+.gradle/
+build/
+bin/
+out/
+
+# IDE / Editor files
+.idea/
+*.iml
+.vscode/
+*.ipr
+*.iws
+
+# Minecraft run directory / local test artifacts
+run/
+runs/
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
