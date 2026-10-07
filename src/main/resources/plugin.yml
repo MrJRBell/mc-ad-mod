@@ -1,0 +1,26 @@
+name: AdvertiseMod
+version: '${project.version}'
+main: com.cozy.advertisemod.AdvertisePlugin
+api-version: '1.20'
+folia-supported: true
+description: Cozy Shopping District Barrel Advertising & Web Indexer Plugin
+author: Cozy Team
+
+commands:
+  advertise:
+    description: Advertise and manage shopping district sales barrels
+    aliases: [adv]
+    permission: cozy.advertise.use
+    usage: /advertise <help|start|stop|status|admin>
+
+permissions:
+  cozy.advertise.use:
+    description: Allows players to register and manage their advertised shop barrels
+    default: true
+  cozy.advertise.admin:
+    description: Allows server administrators to manage shop limits, boundaries, and listings
+    default: op
+
+libraries:
+  - org.xerial:sqlite-jdbc:3.45.1.0
+

@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cozy Shopping District — Shop Directory & Stock Search</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f1117;
+            --bg-secondary: #161922;
+            --bg-card: #1c202d;
+            --bg-card-hover: #232838;
+            --bg-accent: #282f44;
+            --text-primary: #f0f3fa;
+            --text-secondary: #9aa5be;
+            --text-muted: #64708d;
+            --accent-cyan: #38bdf8;
+            --accent-emerald: #10b981;
+            --accent-purple: #c084fc;
+            --accent-amber: #fbbf24;
+            --accent-rose: #f43f5e;
+            --border-color: #272d3f;
+            --border-hover: #3b445e;
+            --shulker-purple: #9333ea;
+            --shulker-highlight: #d946ef;
+            --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.35);
+            --shadow-glow: 0 0 15px rgba(56, 189, 248, 0.25);
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            padding-bottom: 60px;
+        }
+
+        header {
+            background: linear-gradient(180deg, rgba(22, 25, 34, 0.95) 0%, rgba(15, 17, 23, 0.8) 100%);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+        }
+
+        .brand-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #0284c7, #8b5cf6);
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .brand-text h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(90deg, #f0f3fa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .header-stats {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stat-badge {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-badge strong {
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        .live-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--accent-emerald);
+            box-shadow: 0 0 8px var(--accent-emerald);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        .btn-refresh {
+            background: var(--bg-accent);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+        }
+
+        .btn-refresh:hover {
+            background: var(--border-hover);
+            border-color: var(--accent-cyan);
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 28px 24px;
+        }
+
+        .search-section {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .search-box-wrapper {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .search-input {
+            width: 100%;
+            background-color: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px 20px 16px 52px;
+            font-size: 1.05rem;
+            color: var(--text-primary);
+            outline: none;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 20px;
+            pointer-events: none;
+        }
+
+        .clear-btn {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 18px;
+            cursor: pointer;
+            display: none;
+            padding: 4px;
+        }
+
+        .clear-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .filter-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .filter-pills {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .pill {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            user-select: none;
+        }
+
+        .pill:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+        }
+
+        .pill.active {
+            background-color: rgba(56, 189, 248, 0.15);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        .view-summary {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .shops-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+            gap: 22px;
+        }
+
+        @media (max-width: 500px) {
+            .shops-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .shop-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            box-shadow: var(--shadow-subtle);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .shop-card:hover {
+            background-color: var(--bg-card-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .shop-card.has-match {
+            border-color: rgba(217, 70, 239, 0.6);
+            box-shadow: 0 0 20px rgba(217, 70, 239, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .shop-title-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .owner-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background-color: var(--bg-accent);
+            border: 2px solid var(--border-color);
+            image-rendering: pixelated;
+        }
+
+        .shop-title h2 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .shop-owner {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        .price-badge {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(192, 132, 252, 0.15));
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            padding: 6px 12px;
+            border-radius: 10px;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .price-title {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            letter-spacing: 0.05em;
+        }
+
+        .price-value {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .location-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: rgba(15, 17, 23, 0.6);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+        }
+
+        .btn-copy-coords {
+            background: transparent;
+            border: none;
+            color: var(--accent-cyan);
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+
+        .btn-copy-coords:hover {
+            background-color: rgba(56, 189, 248, 0.1);
+        }
+
+        .listings-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .listings-heading {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .listing-items {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .regular-item-badge {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 9px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.88rem;
+        }
+
+        .regular-item-badge.matched {
+            border-color: var(--accent-emerald);
+            background-color: rgba(16, 185, 129, 0.08);
+        }
+
+        .item-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .item-qty {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .shulker-container {
+            border: 1px solid rgba(147, 51, 234, 0.35);
+            background: rgba(147, 51, 234, 0.06);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .shulker-container.matched {
+            border-color: var(--shulker-highlight);
+            background: rgba(217, 70, 239, 0.12);
+            box-shadow: 0 0 14px rgba(217, 70, 239, 0.2);
+        }
+
+        .shulker-header {
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            transition: var(--transition);
+        }
+
+        .shulker-header:hover {
+            background-color: rgba(147, 51, 234, 0.12);
+        }
+
+        .shulker-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: #d8b4fe;
+        }
+
+        .shulker-icon {
+            font-size: 16px;
+        }
+
+        .shulker-tag {
+            background-color: rgba(147, 51, 234, 0.3);
+            color: #f3e8ff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .deep-match-tag {
+            background: linear-gradient(135deg, #ec4899, #8b5cf6);
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 6px;
+            box-shadow: 0 0 8px rgba(236, 72, 153, 0.5);
+        }
+
+        .shulker-toggle-icon {
+            color: var(--text-muted);
+            font-size: 12px;
+            transition: transform 0.2s ease;
+        }
+
+        .shulker-container.open .shulker-toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .shulker-body {
+            padding: 0 14px 12px;
+            display: none;
+            border-top: 1px dashed rgba(147, 51, 234, 0.2);
+        }
+
+        .shulker-container.open .shulker-body {
+            display: block;
+        }
+
+        .shulker-grid-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+            margin: 10px 0 6px;
+            font-weight: 700;
+        }
+
+        .shulker-items-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 6px;
+        }
+
+        .shulker-inner-item {
+            background-color: rgba(15, 17, 23, 0.75);
+            border: 1px solid rgba(147, 51, 234, 0.2);
+            border-radius: 6px;
+            padding: 6px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.78rem;
+        }
+
+        .shulker-inner-item.item-highlight {
+            border-color: #f43f5e;
+            background-color: rgba(244, 63, 94, 0.15);
+            font-weight: 600;
+        }
+
+        .inner-item-name {
+            color: var(--text-primary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .inner-item-count {
+            font-family: 'JetBrains Mono', monospace;
+            color: #d8b4fe;
+            font-weight: 700;
+            margin-left: 6px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background-color: var(--bg-secondary);
+            border: 1px dashed var(--border-color);
+            border-radius: 16px;
+            grid-column: 1 / -1;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.6;
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .empty-state p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1px solid #334155;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.25s ease;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-container">
+            <a href="/" class="brand">
+                <div class="brand-icon">📦</div>
+                <div class="brand-text">
+                    <h1>Cozy Shopping District</h1>
+                    <p>Live Barrels & Deep Shulker Index</p>
+                </div>
+            </a>
+
+            <div class="header-stats">
+                <div class="stat-badge">
+                    <span class="live-indicator"></span>
+                    <span>Live Sync</span>
+                </div>
+                <div class="stat-badge">
+                    <span>Shops:</span>
+                    <strong id="stat-shops-count">0</strong>
+                </div>
+                <div class="stat-badge">
+                    <span>Listings:</span>
+                    <strong id="stat-items-count">0</strong>
+                </div>
+                <button class="btn-refresh" id="refresh-btn" title="Refresh shop listings">
+                    <span>↻</span> Refresh
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="search-section">
+            <div class="search-box-wrapper">
+                <span class="search-icon">🔍</span>
+                <input
+                    type="text"
+                    id="search-input"
+                    class="search-input"
+                    placeholder="Search by item, deep shulker contents (e.g. Elytra, Mending), shop name, or seller..."
+                    autocomplete="off"
+                >
+                <button id="clear-search" class="clear-btn">✕</button>
+            </div>
+
+            <div class="filter-controls">
+                <div class="filter-pills">
+                    <span class="pill active" data-filter="all">All Items</span>
+                    <span class="pill" data-filter="shulkers">Shulker Boxes Only</span>
+                    <span class="pill" data-filter="items">Regular Items</span>
+                    <span class="pill" data-filter="instock">In Stock Only</span>
+                </div>
+                <div class="view-summary" id="results-count">
+                    Loading shop catalog...
+                </div>
+            </div>
+        </section>
+
+        <section class="shops-grid" id="shops-grid">
+            <!-- Dynamically populated shop cards -->
+        </section>
+    </main>
+
+    <div id="toast" class="toast">
+        <span>✔</span> <span id="toast-msg">Coordinates copied to clipboard!</span>
+    </div>
+
+    <script>
+        // State
+        let allShops = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
+
+        const searchInput = document.getElementById('search-input');
+        const clearSearchBtn = document.getElementById('clear-search');
+        const shopsGrid = document.getElementById('shops-grid');
+        const resultsCountEl = document.getElementById('results-count');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const statShopsCount = document.getElementById('stat-shops-count');
+        const statItemsCount = document.getElementById('stat-items-count');
+        const filterPills = document.querySelectorAll('.pill');
+
+        // Fetch shops from REST API
+        async function fetchShops() {
+            try {
+                resultsCountEl.textContent = 'Syncing stock from server...';
+                const response = await fetch('/api/shops');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                allShops = await response.json();
+                updateStats();
+                renderShops();
+            } catch (err) {
+                console.error('Error fetching shops:', err);
+                shopsGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">⚠️</div>
+                        <h3>Failed to load shops</h3>
+                        <p>Could not connect to the Cozy server web API. Please verify the server is running.</p>
+                    </div>
+                `;
+                resultsCountEl.textContent = 'Connection error';
+            }
+        }
+
+        function updateStats() {
+            statShopsCount.textContent = allShops.length;
+            let totalListings = 0;
+            allShops.forEach(shop => {
+                if (shop.listings) {
+                    totalListings += shop.listings.length;
+                }
+            });
+            statItemsCount.textContent = totalListings;
+        }
+
+        // Format Minecraft names nicely (e.g. DIAMOND_HELMET -> Diamond Helmet)
+        function formatItemName(rawName) {
+            if (!rawName) return '';
+            return rawName.toLowerCase()
+                .split('_')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+
+        // Filter and Render
+        function renderShops() {
+            const query = searchQuery.trim().toLowerCase();
+            let matchedShops = [];
+            let totalMatchingListings = 0;
+
+            allShops.forEach(shop => {
+                const shopMatchesMeta = (
+                    (shop.shop_name && shop.shop_name.toLowerCase().includes(query)) ||
+                    (shop.owner_name && shop.owner_name.toLowerCase().includes(query)) ||
+                    (shop.barrel_id && shop.barrel_id.toLowerCase().includes(query))
+                );
+
+                let matchedListings = [];
+                let hasDeepMatch = false;
+
+                if (shop.listings) {
+                    shop.listings.forEach(listing => {
+                        let isMatched = false;
+                        let itemDeepMatched = false;
+
+                        // Check filter pills
+                        if (currentFilter === 'shulkers' && !listing.is_shulker) return;
+                        if (currentFilter === 'items' && listing.is_shulker) return;
+                        if (currentFilter === 'instock' && listing.quantity_available <= 0) return;
+
+                        if (!query || shopMatchesMeta) {
+                            isMatched = true;
+                        }
+
+                        // Check top-level item match
+                        const formattedName = formatItemName(listing.item_type).toLowerCase();
+                        const rawType = listing.item_type.toLowerCase();
+                        const customName = (listing.display_name || '').toLowerCase();
+
+                        if (query && (formattedName.includes(query) || rawType.includes(query) || customName.includes(query))) {
+                            isMatched = true;
+                        }
+
+                        // Check deep Shulker Box inspection
+                        if (listing.is_shulker && listing.shulker_contents) {
+                            for (const inner of listing.shulker_contents) {
+                                const innerFormatted = formatItemName(inner.item).toLowerCase();
+                                const innerRaw = inner.item.toLowerCase();
+                                const innerCustom = (inner.display_name || '').toLowerCase();
+
+                                if (query && (innerFormatted.includes(query) || innerRaw.includes(query) || innerCustom.includes(query))) {
+                                    isMatched = true;
+                                    itemDeepMatched = true;
+                                    hasDeepMatch = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (isMatched) {
+                            matchedListings.push({
+                                ...listing,
+                                deepMatch: itemDeepMatched
+                            });
+                        }
+                    });
+                }
+
+                if (matchedListings.length > 0 || (!query && shop.listings && shop.listings.length > 0)) {
+                    matchedShops.push({
+                        ...shop,
+                        filteredListings: matchedListings,
+                        hasDeepMatch: hasDeepMatch
+                    });
+                    totalMatchingListings += matchedListings.length;
+                }
+            });
+
+            // Update UI count
+            resultsCountEl.textContent = `Showing ${matchedShops.length} shop${matchedShops.length === 1 ? '' : 's'} (${totalMatchingListings} listing${totalMatchingListings === 1 ? '' : 's'})`;
+
+            if (matchedShops.length === 0) {
+                shopsGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🔎</div>
+                        <h3>No items or shops found</h3>
+                        <p>No listings matched "${escapeHtml(query)}". Try searching for another item or clearing filters.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Render cards
+            shopsGrid.innerHTML = matchedShops.map(shop => {
+                const loc = shop.location || { world: 'world', x: 0, y: 0, z: 0 };
+                const coordsText = `${loc.world} (${loc.x}, ${loc.y}, ${loc.z})`;
+                const tpCommand = `/tp ${loc.x} ${loc.y} ${loc.z}`;
+                const pricing = shop.pricing || { price_amount: 1, price_unit: 'diamond', sell_amount: 1, sell_unit: 'item' };
+
+                return `
+                    <div class="shop-card ${shop.hasDeepMatch ? 'has-match' : ''}">
+                        <div class="card-header">
+                            <div class="shop-title-area">
+                                <img
+                                    src="https://mc-heads.net/avatar/${shop.owner_uuid || shop.owner_name}/40"
+                                    onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'40\\' height=\\'40\\' viewBox=\\'0 0 40 40\\'><rect width=\\'40\\' height=\\'40\\' fill=\\'%23282f44\\'/><text x=\\'20\\' y=\\'25\\' font-size=\\'18\\' text-anchor=\\'middle\\' fill=\\'%239aa5be\\'>👤</text></svg>'"
+                                    alt="${escapeHtml(shop.owner_name)}"
+                                    class="owner-avatar"
+                                >
+                                <div class="shop-title">
+                                    <h2>${escapeHtml(shop.shop_name || 'Shopping Barrel')}</h2>
+                                    <div class="shop-owner">by <strong>${escapeHtml(shop.owner_name)}</strong></div>
+                                </div>
+                            </div>
+                            <div class="price-badge">
+                                <div class="price-title">Price Rule</div>
+                                <div class="price-value">
+                                    ${pricing.price_amount} ${formatItemName(pricing.price_unit)} / ${pricing.sell_amount} ${pricing.sell_unit}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="location-bar">
+                            <span>📍 ${escapeHtml(coordsText)}</span>
+                            <button class="btn-copy-coords" onclick="copyToClipboard('${escapeHtml(tpCommand)}')">
+                                Copy /tp
+                            </button>
+                        </div>
+
+                        <div class="listings-section">
+                            <div class="listings-heading">Available Inventory</div>
+                            <div class="listing-items">
+                                ${shop.filteredListings.map(item => renderListingItem(item, query)).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderListingItem(listing, query) {
+            if (listing.is_shulker) {
+                const deepMatchBadge = listing.deepMatch
+                    ? `<span class="deep-match-tag">★ Contains "${escapeHtml(query)}"</span>`
+                    : '';
+
+                const shouldAutoOpen = Boolean(listing.deepMatch && query);
+
+                return `
+                    <div class="shulker-container ${listing.deepMatch ? 'matched' : ''} ${shouldAutoOpen ? 'open' : ''}">
+                        <div class="shulker-header" onclick="this.parentElement.classList.toggle('open')">
+                            <div class="shulker-title">
+                                <span class="shulker-icon">🔮</span>
+                                <span>${escapeHtml(listing.display_name || formatItemName(listing.item_type))}</span>
+                                <span class="shulker-tag">${listing.quantity_available} Box${listing.quantity_available > 1 ? 'es' : ''}</span>
+                                ${deepMatchBadge}
+                            </div>
+                            <span class="shulker-toggle-icon">▼</span>
+                        </div>
+                        <div class="shulker-body">
+                            <div class="shulker-grid-title">Internal Shulker Inventory (${listing.shulker_contents ? listing.shulker_contents.length : 0} types)</div>
+                            <div class="shulker-items-list">
+                                ${listing.shulker_contents ? listing.shulker_contents.map(inner => {
+                                    const innerFormatted = formatItemName(inner.item);
+                                    const isInnerMatch = query && (
+                                        innerFormatted.toLowerCase().includes(query) ||
+                                        inner.item.toLowerCase().includes(query) ||
+                                        (inner.display_name && inner.display_name.toLowerCase().includes(query))
+                                    );
+                                    return `
+                                        <div class="shulker-inner-item ${isInnerMatch ? 'item-highlight' : ''}">
+                                            <span class="inner-item-name" title="${escapeHtml(inner.display_name || innerFormatted)}">
+                                                ${escapeHtml(inner.display_name || innerFormatted)}
+                                            </span>
+                                            <span class="inner-item-count">×${inner.count}</span>
+                                        </div>
+                                    `;
+                                }).join('') : '<div style="color:var(--text-muted); font-size:0.8rem;">Empty Shulker Box</div>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                const isMatched = query && (
+                    formatItemName(listing.item_type).toLowerCase().includes(query) ||
+                    listing.item_type.toLowerCase().includes(query)
+                );
+
+                return `
+                    <div class="regular-item-badge ${isMatched ? 'matched' : ''}">
+                        <div class="item-info">
+                            <span>📦</span>
+                            <span class="item-name">${escapeHtml(listing.display_name || formatItemName(listing.item_type))}</span>
+                        </div>
+                        <span class="item-qty">Stock: ${listing.quantity_available}</span>
+                    </div>
+                `;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`Copied "${text}" to clipboard!`);
+            }).catch(() => {
+                showToast('Failed to copy to clipboard');
+            });
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // Event Listeners
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            clearSearchBtn.style.display = searchQuery ? 'block' : 'none';
+            renderShops();
+        });
+
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            searchQuery = '';
+            clearSearchBtn.style.display = 'none';
+            renderShops();
+        });
+
+        refreshBtn.addEventListener('click', () => {
+            fetchShops();
+            showToast('Refreshed shop inventory!');
+        });
+
+        filterPills.forEach(pill => {
+            pill.addEventListener('click', () => {
+                filterPills.forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                currentFilter = pill.getAttribute('data-filter');
+                renderShops();
+            });
+        });
+
+        // Initialize & Auto-sync every 30s
+        fetchShops();
+        setInterval(fetchShops, 30000);
+    </script>
+</body>
+</html>
+

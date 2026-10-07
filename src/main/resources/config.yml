@@ -1,0 +1,31 @@
+# ==============================================================================
+#                      AdvertiseMod Configuration
+# ==============================================================================
+
+# Embedded HTTP microservice settings
+web_server:
+  port: 8080
+  enabled: true
+
+# Player barrel ownership quotas
+limits:
+  max_barrels_per_player: 64
+
+# Shopping district boundaries and dimension restrictions
+shopping_district:
+  enforce_area_limits: true
+  allowed_dimensions:
+    - "world_the_end"
+    - "the_sift" # Reserved for future dimension release
+  bounds:
+    min_x: -1000
+    max_x: 1000
+    min_y: 0
+    max_y: 256
+    min_z: -1000
+    max_z: 1000
+
+# Periodic stock synchronization settings
+scanning:
+  audit_interval_seconds: 30
+
