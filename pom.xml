@@ -39,7 +39,8 @@
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
             <version>${sqlite.version}</version>
-            <scope>compile</scope>
+            <!-- Loaded by Paper/Canvas from plugin.yml's libraries section. -->
+            <scope>provided</scope>
         </dependency>
 
         <!-- Google Gson for JSON serialization (provided by Paper) -->
@@ -82,12 +83,6 @@
                         </goals>
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <relocations>
-                                <relocation>
-                                    <pattern>org.sqlite</pattern>
-                                    <shadedPattern>com.cozy.advertisemod.libs.sqlite</shadedPattern>
-                                </relocation>
-                            </relocations>
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>
@@ -105,4 +100,3 @@
         </plugins>
     </build>
 </project>
-
