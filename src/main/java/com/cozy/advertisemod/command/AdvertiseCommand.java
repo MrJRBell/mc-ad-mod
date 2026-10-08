@@ -8,6 +8,7 @@ import com.cozy.advertisemod.model.ShulkerContent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.block.Block;
 import org.bukkit.block.Barrel;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -16,7 +17,6 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -72,7 +72,8 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(ChatColor.YELLOW + "         ★ Cozy Shopping District ★");
         sender.sendMessage(ChatColor.GOLD + "========================================");
         sender.sendMessage(ChatColor.AQUA + "/advertise start <price> <unit> <sell_amount> <sell_unit> [shop_name]");
-        sender.sendMessage(ChatColor.GRAY + "  Register an open barrel as a shop listing.");
+        sender.sendMessage(ChatColor.GRAY + "  Look at a barrel and run this command to register it as a shop listing.");
+        sender.sendMessage(ChatColor.GRAY + "  The barrel must be within 5 blocks; looking at anything else shows an error.");
         sender.sendMessage(ChatColor.DARK_GRAY + "  Price Units: " + ChatColor.WHITE + "diamond, diamond_block");
         sender.sendMessage(ChatColor.DARK_GRAY + "  Sell Units: " + ChatColor.WHITE + "item, stack, shulker");
         sender.sendMessage(ChatColor.AQUA + "/advertise stop");
@@ -102,16 +103,10 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        // 1. Verify player has an open Barrel
-        Inventory openInv = player.getOpenInventory().getTopInventory();
-        if (openInv.getType() != InventoryType.BARREL) {
-            player.sendMessage(ChatColor.RED + "You must have a Barrel open to advertise it!");
-            return;
-        }
-
-        InventoryHolder holder = openInv.getHolder();
-        if (!(holder instanceof Barrel barrel)) {
-            player.sendMessage(ChatColor.RED + "Unable to resolve the open Barrel entity.");
+        // Resolve the barrel the player is looking at, so registration works with its inventory closed.
+        Block targetBlock = player.getTargetBlockExact(5);
+        if (targetBlock == null || !(targetBlock.getState() instanceof Barrel barrel)) {
+            player.sendMessage(ChatColor.RED + "You must be looking at a Barrel within 5 blocks to advertise it.");
             return;
         }
 
@@ -376,4 +371,3 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
         return matches;
     }
 }
-

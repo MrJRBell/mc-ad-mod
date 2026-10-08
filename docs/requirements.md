@@ -82,7 +82,8 @@ Permission: cozy.advertise.use (Default: true)
 
 2. /advertise start <price_amount> <price_unit> <sell_amount> <sell_unit> [shop_name]
    - Prerequisites:
-     * The player MUST have a Barrel open (InventoryType.BARREL).
+     * The player MUST be looking directly at a BARREL block within 5 blocks when the command is run. The barrel inventory does not need to be open.
+     * If the targeted block is not a BARREL, or no block is targeted within 5 blocks, the plugin MUST show an error and not register anything.
      * The barrel MUST be within allowed dimensions and spatial boundaries.
      * The barrel MUST NOT already be registered by another player (Ownership Lock).
      * The registering player MUST NOT exceed limits.max_barrels_per_player (Default: 64).
