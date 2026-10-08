@@ -50,7 +50,7 @@ public class WebServer {
         int port = plugin.getConfigManager().getWebServerPort();
         try {
             server = HttpServer.create(new InetSocketAddress(port), 0);
-            server.setExecutor(Executors.newFixedThreadPool(4));
+            server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
 
             server.createContext("/api/shops", new ShopsApiHandler());
             server.createContext("/", new StaticFileHandler());

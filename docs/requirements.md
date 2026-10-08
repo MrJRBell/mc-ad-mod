@@ -15,16 +15,24 @@ The plugin continuously monitors stock levels (including deep-scanning the conte
 
 --------------------------------------------------------------------------------
 
-2. Technical Stack & Environment Requirements
-- Target Platform: Minecraft 1.20.x+ (Paper / Folia API)
-- Language: Java 17+ or 21
-- Concurrency Model (Folia Safety):
-  * plugin.yml must explicitly define 'folia-supported: true'.
-  * Strict Thread Boundary Rules:
-    - World block state checks, tile entity inspections, and inventory operations MUST run via Folia’s RegionScheduler or within Bukkit event listeners.
-    - Database I/O (SQLite), HTTP microservice execution, background tasks, and network calls MUST execute asynchronously via Folia's AsyncScheduler.
-- Database: Embedded SQLite (shops.db).
-- Build Tool: Maven (Standard directory layout).
+2. Technical Stack & Environment Requirements (Canvas 26.2 & Velocity Proxy)
+- Target Server Platform: CanvasMC 26.2 (Folia-based backend) behind a Velocity Proxy
+- Client Version: Minecraft 1.26.2
+- Language Runtime: Java 21 LTS
+- Architecture & Network Topology:
+  * Network Gateway: Velocity Proxy routes player connections from the client (1.26.2) to backend server instances.
+  * Game Backend: CanvasMC 26.2 hosts the shopping district world, terrain chunks, block entities (Barrels), and inventories.
+  * Placement of AdvertiseMod: Deployed directly on the CanvasMC backend server where world blocks, containers, and events live.
+  * Velocity Forwarding: Player identification (`player.getUniqueId()` and `player.getName()`) leverages Velocity Modern Forwarding configured on the Canvas backend.
+- Concurrency & Threading Model (Canvas / Folia Native):
+  * plugin.yml explicitly sets 'folia-supported: true' (enforced by CanvasMC).
+  * Strict Region Scheduling:
+    - Block entity checks, barrel inventory reads, and tile validations execute strictly via Folia/Canvas RegionScheduler or on the native region thread inside Bukkit event handlers.
+    - Off-region / asynchronous chunk accesses are forbidden.
+  * AsyncScheduler for I/O:
+    - Embedded SQLite queries (shops.db), embedded HTTP WebServer execution, and periodic stock audit timers execute asynchronously via Folia/Canvas AsyncScheduler.
+- Database: Embedded SQLite (shops.db with WAL mode enabled).
+- Build Tool: Maven (standard Maven directory layout, Java 21 release target).
 
 --------------------------------------------------------------------------------
 
