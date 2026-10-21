@@ -413,6 +413,19 @@
             flex-direction: column;
             gap: 8px;
         }
+        .effective-price {
+            color: var(--accent, #58d68d);
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: auto;
+            text-align: right;
+        }
+        .fair-market-tag {
+            color: #f7c873;
+            display: block;
+            font-size: 0.68rem;
+            font-weight: 500;
+        }
 
         .regular-item-badge {
             background-color: var(--bg-primary);
@@ -899,6 +912,13 @@
         }
 
         function renderListingItem(listing, query) {
+            const effectivePricing = listing.effective_pricing;
+            const effectivePriceText = effectivePricing
+                ? `${effectivePricing.price_amount} ${formatItemName(effectivePricing.price_unit)} / ${effectivePricing.sell_amount} ${effectivePricing.sell_unit}`
+                : '';
+            const effectivePriceBadge = effectivePricing
+                ? `<span class="effective-price">${escapeHtml(effectivePriceText)}${effectivePricing.fair_market_floor_applied ? '<span class="fair-market-tag">Fair market floor</span>' : ''}</span>`
+                : '';
             if (listing.is_shulker) {
                 const deepMatchBadge = listing.deepMatch
                     ? `<span class="deep-match-tag">★ Contains "${escapeHtml(query)}"</span>`
@@ -913,6 +933,7 @@
                                 <span class="shulker-icon">🔮</span>
                                 <span>${escapeHtml(listing.display_name || formatItemName(listing.item_type))}</span>
                                 <span class="shulker-tag">${listing.quantity_available} Box${listing.quantity_available > 1 ? 'es' : ''}</span>
+                                ${effectivePriceBadge}
                                 ${deepMatchBadge}
                             </div>
                             <span class="shulker-toggle-icon">▼</span>
@@ -922,6 +943,10 @@
                             <div class="shulker-items-list">
                                 ${listing.shulker_contents ? listing.shulker_contents.map(inner => {
                                     const innerFormatted = formatItemName(inner.item);
+                                    const innerPricing = inner.effective_pricing;
+                                    const innerPriceText = innerPricing
+                                        ? `${innerPricing.price_amount} ${formatItemName(innerPricing.price_unit)} / ${innerPricing.sell_amount} ${innerPricing.sell_unit}`
+                                        : '';
                                     const isInnerMatch = query && (
                                         innerFormatted.toLowerCase().includes(query) ||
                                         inner.item.toLowerCase().includes(query) ||
@@ -933,6 +958,7 @@
                                                 ${escapeHtml(inner.display_name || innerFormatted)}
                                             </span>
                                             <span class="inner-item-count">×${inner.count}</span>
+                                            ${innerPricing ? `<span class="effective-price">${escapeHtml(innerPriceText)}${innerPricing.fair_market_floor_applied ? '<span class="fair-market-tag">Fair market floor</span>' : ''}</span>` : ''}
                                         </div>
                                     `;
                                 }).join('') : '<div style="color:var(--text-muted); font-size:0.8rem;">Empty Shulker Box</div>'}
@@ -953,6 +979,7 @@
                             <span class="item-name">${escapeHtml(listing.display_name || formatItemName(listing.item_type))}</span>
                         </div>
                         <span class="item-qty">Stock: ${listing.quantity_available}</span>
+                        ${effectivePriceBadge}
                     </div>
                 `;
             }

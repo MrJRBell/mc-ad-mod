@@ -3,6 +3,7 @@ package com.cozy.advertisemod;
 import com.cozy.advertisemod.command.AdvertiseCommand;
 import com.cozy.advertisemod.config.ConfigManager;
 import com.cozy.advertisemod.database.DatabaseManager;
+import com.cozy.advertisemod.fairmarket.FairMarketPriceManager;
 import com.cozy.advertisemod.listener.BlockListener;
 import com.cozy.advertisemod.listener.InventoryListener;
 import com.cozy.advertisemod.model.ShopListing;
@@ -26,6 +27,7 @@ public class AdvertisePlugin extends JavaPlugin {
 
     private ConfigManager configManager;
     private DatabaseManager databaseManager;
+    private FairMarketPriceManager fairMarketPriceManager;
     private StockAuditTask stockAuditTask;
     private WebServer webServer;
 
@@ -37,6 +39,7 @@ public class AdvertisePlugin extends JavaPlugin {
 
         // 1. Load configuration
         this.configManager = new ConfigManager(this);
+        this.fairMarketPriceManager = new FairMarketPriceManager(this);
 
         // 2. Extract default web assets if not present
         extractWebAssets();
@@ -131,6 +134,7 @@ public class AdvertisePlugin extends JavaPlugin {
 
     public void reloadPlugin() {
         configManager.loadConfig();
+        fairMarketPriceManager.reload();
 
         if (webServer != null) {
             webServer.stop();
@@ -148,6 +152,10 @@ public class AdvertisePlugin extends JavaPlugin {
 
     public DatabaseManager getDatabaseManager() {
         return databaseManager;
+    }
+
+    public FairMarketPriceManager getFairMarketPriceManager() {
+        return fairMarketPriceManager;
     }
 
     public StockAuditTask getStockAuditTask() {

@@ -1,6 +1,7 @@
 package com.cozy.advertisemod.web;
 
 import com.cozy.advertisemod.AdvertisePlugin;
+import com.cozy.advertisemod.fairmarket.FairMarketPriceCalculator;
 import com.cozy.advertisemod.model.RegisteredBarrel;
 import com.cozy.advertisemod.model.ShopFeedItem;
 import com.cozy.advertisemod.model.ShopListing;
@@ -97,7 +98,12 @@ public class WebServer {
                     if (listings == null) {
                         listings = Collections.emptyList();
                     }
-                    feedItems.add(ShopFeedItem.fromBarrel(barrel, listings));
+                    List<ShopListing> pricedListings = new ArrayList<>(listings.size());
+                    for (ShopListing listing : listings) {
+                        pricedListings.add(FairMarketPriceCalculator.withEffectivePrices(
+                                barrel, listing, plugin.getFairMarketPriceManager()));
+                    }
+                    feedItems.add(ShopFeedItem.fromBarrel(barrel, pricedListings));
                 }
 
                 String json = gson.toJson(feedItems);

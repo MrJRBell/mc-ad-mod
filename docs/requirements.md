@@ -78,7 +78,7 @@ Player Commands (/advertise or alias /adv):
 Permission: cozy.advertise.use (Default: true)
 
 1. /advertise help
-   - Displays an in-game formatted guide detailing command syntax, registration rules, currency rules, and allowed shopping district boundaries.
+   - Displays an in-game formatted guide detailing command syntax, registration rules, fair market price behavior, currency rules, and allowed shopping district boundaries.
 
 2. /advertise start <price_amount> <price_unit> <sell_amount> <sell_unit> [shop_name]
    - Prerequisites:
@@ -87,6 +87,7 @@ Permission: cozy.advertise.use (Default: true)
      * The barrel MUST be within allowed dimensions and spatial boundaries.
      * The barrel MUST NOT already be registered by another player (Ownership Lock).
      * The registering player MUST NOT exceed limits.max_barrels_per_player (Default: 64).
+     * Every saleable material currently in the barrel, including materials inside shulker boxes, MUST meet its configured fair market price. If any item is below its floor, reject the registration or update and name the offending materials and floors.
    - Arguments & Tab Completion (Brigadier/Paper API):
      * <price_amount>: Positive Integer.
      * <price_unit>: Enum [diamond, diamond_block].
@@ -101,6 +102,14 @@ Permission: cozy.advertise.use (Default: true)
 4. /advertise status
    - While the player is looking directly at a BARREL block within 5 blocks, displays its advertisement status, shop name, price rule, remaining item count, and recent audit history. Its inventory does not need to be open.
    - If the targeted block is not a BARREL, or no block is targeted within 5 blocks, show an error.
+
+5. /advertise setFairMarketPrice <material> <amount> <diamond|diamond_block> <stack|shulker>
+   - This root command MUST require the `cozy.advertise.admin` permission. This permission defaults to operators (`op`) and can also be granted by a server permissions plugin.
+   - `<material>` is a valid saleable Minecraft material. DIAMOND and DIAMOND_BLOCK are excluded currencies and cannot have fair market prices.
+   - `<amount>` is a positive whole number. `<stack|shulker>` defines the quantity the amount covers.
+   - A stack uses the material's vanilla maximum stack size (normally 64, 16, or 1). A shulker uses 27 stacks at that material's vanilla maximum stack size.
+   - Successful command updates MUST be saved immediately to `plugins/AdvertiseMod/fair-market-prices.yml`.
+   - Admins may bulk edit the same file. `/advertise admin reload` MUST reload those prices without restarting the server.
 
 Admin Commands (/advertise admin <subcommand>):
 Permission: cozy.advertise.admin (Default: op)
@@ -130,6 +139,28 @@ Scanning Rules:
    - Inspect and count all Shulker Boxes inside the barrel.
    - Recursively inspect internal NBT/block entity tags of each Shulker Box to index all internal contents (material, item count, display name, lore).
    - Expose both top-level Shulker count and nested item inventories to the web service.
+
+Fair Market Price Rules:
+------------------------
+- `fair-market-prices.yml` stores one optional floor per material, with `amount`, `currency` (`diamond` or `diamond_block`), and `unit` (`stack` or `shulker`). Example:
+
+  ```yaml
+  prices:
+    DIAMOND_SWORD:
+      amount: 2
+      currency: diamond
+      unit: stack
+    ELYTRA:
+      amount: 1
+      currency: diamond_block
+      unit: shulker
+  ```
+
+- Compare prices in diamond equivalents, with one diamond block equal to nine diamonds. Compare exact per-item values; do not round intermediate calculations. When converting a floor back to an advertised whole-currency price, round upward.
+- On `/advertise start`, reject the operation if any currently stocked saleable material (including each material nested in a shulker) would be advertised below its configured floor. Materials without a configured floor do not block registration.
+- The barrel's original price rule remains stored. If later stock is added below its floor, keep the barrel listed and warn the player who added the stock when they close the barrel inventory.
+- If an administrator raises a floor, the web feed MUST apply the new floor to affected existing listings. The web UI/API MUST expose an effective price per top-level listing and per nested shulker item, retaining the barrel's original price rule as the base price. This adjustment does not unregister the barrel.
+- Inventory additions by automation have no player to warn; the next web feed response still applies current floors.
 
 --------------------------------------------------------------------------------
 
@@ -180,6 +211,7 @@ Stock Syncing & Lifecycle Events:
 
 Endpoints:
 1. GET /api/shops: Returns JSON array of all active shop barrels, individual listings, and deep-scanned Shulker contents.
+   - Each listing and nested shulker item MUST include `effective_pricing` with `price_amount`, `price_unit`, `sell_amount`, `sell_unit`, and `fair_market_floor_applied`. If a floor has to raise the price, return the rounded-up effective price and set `fair_market_floor_applied` to `true`; otherwise return the original barrel price and `false`.
    JSON Response Format:
    [
      {

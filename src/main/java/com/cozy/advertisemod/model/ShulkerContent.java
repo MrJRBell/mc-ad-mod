@@ -1,5 +1,6 @@
 package com.cozy.advertisemod.model;
 
+import com.cozy.advertisemod.fairmarket.EffectivePricing;
 import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
@@ -19,6 +20,9 @@ public class ShulkerContent {
 
     @SerializedName("lore")
     private final List<String> lore;
+
+    @SerializedName("effective_pricing")
+    private EffectivePricing effectivePricing;
 
     public ShulkerContent(String item, int count, String displayName, List<String> lore) {
         this.item = item;
@@ -49,6 +53,16 @@ public class ShulkerContent {
 
     public List<String> getLore() {
         return lore;
+    }
+
+    public EffectivePricing getEffectivePricing() {
+        return effectivePricing;
+    }
+
+    public ShulkerContent withEffectivePricing(EffectivePricing pricing) {
+        ShulkerContent copy = new ShulkerContent(item, count, displayName, lore);
+        copy.effectivePricing = pricing;
+        return copy;
     }
 }
 

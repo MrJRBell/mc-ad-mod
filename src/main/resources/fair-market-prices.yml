@@ -1,0 +1,4 @@
+# Admin-managed minimum advertising prices. Values are per vanilla stack size
+# or per full shulker (27 stacks at that material's vanilla stack size).
+# Entries can also be changed with /advertise setFairMarketPrice.
+prices: {}

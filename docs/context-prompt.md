@@ -14,7 +14,7 @@ I need you to implement the complete, production-ready codebase for the `Adverti
    - All I/O operations (SQLite database queries, embedded HTTP server execution, and background scheduled tasks) MUST run asynchronously using Folia's `AsyncScheduler`.
 
 2. **Core Functionality to Implement:**
-   - **Command Handlers (`/advertise` & `/advertise admin`):** Implement full Brigadier tab completion for subcommands, pricing units (`diamond`, `diamond_block`), and sell units (`item`, `stack`, `shulker`). For `/advertise start`, `/advertise stop`, and `/advertise status`, resolve the BARREL block the player is looking at within 5 blocks; its inventory does not need to be open. Show an error if the targeted block is not a BARREL. Enforce the 64-barrel per player limit and check spatial boundary limits defined in `config.yml`.
+   - **Command Handlers (`/advertise` & `/advertise admin`):** Implement full Brigadier tab completion for subcommands, pricing units (`diamond`, `diamond_block`), and sell units (`item`, `stack`, `shulker`). For `/advertise start`, `/advertise stop`, and `/advertise status`, resolve the BARREL block the player is looking at within 5 blocks; its inventory does not need to be open. Show an error if the targeted block is not a BARREL. Enforce the 64-barrel per player limit and check spatial boundary limits defined in `config.yml`. The admin-only root command `/advertise setFairMarketPrice <material> <amount> <diamond|diamond_block> <stack|shulker>` sets a material floor saved to `fair-market-prices.yml`; admin reload must reload this file. Reject new or updated adverts if any stocked item falls below its floor. Warn players on barrel close when newly added stock falls below its floor, keep that barrel listed, and expose per-item floor-adjusted prices in web API/UI.
    - **Barrel Scanner (`BarrelScanner.java`):** Recursively scan barrels while ignoring currency (`DIAMOND`/`DIAMOND_BLOCK`) and private display items starting with `*`. Deep-scan Shulker Box NBT/item meta to index internal contents.
    - **Audit Logging & Database (`DatabaseManager.java`):** Set up the SQLite connection (`shops.db`) to manage `registered_barrels` and immutable `audit_logs` for creation, unregistration, block breaks, and admin removals.
    - **Embedded Web Microservice (`WebServer.java`):** Configure `com.sun.net.httpserver.HttpServer` on port 8080. Include `Access-Control-Allow-Origin: *` CORS headers. Serve the JSON feed at `/api/shops` and the static single-page app at `/`.
@@ -33,5 +33,6 @@ I need you to implement the complete, production-ready codebase for the `Adverti
    - `StockAuditTask.java`
    - `WebServer.java`
    - `src/main/resources/web/index.html`
+   - `src/main/resources/fair-market-prices.yml`
 
 Read `requirements.md` and start building the application step-by-step.

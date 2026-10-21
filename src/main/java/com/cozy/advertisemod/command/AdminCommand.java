@@ -1,14 +1,17 @@
 package com.cozy.advertisemod.command;
 
 import com.cozy.advertisemod.AdvertisePlugin;
+import com.cozy.advertisemod.fairmarket.FairMarketPrice;
 import com.cozy.advertisemod.model.RegisteredBarrel;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.sql.SQLException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -53,6 +56,56 @@ public class AdminCommand {
         sender.sendMessage(ChatColor.YELLOW + "/advertise admin remove <world> <x> <y> <z> " + ChatColor.GRAY + "- Force remove shop barrel");
         sender.sendMessage(ChatColor.YELLOW + "/advertise admin setlimit <player|default> <amount> " + ChatColor.GRAY + "- Update barrel limit");
         sender.sendMessage(ChatColor.YELLOW + "/advertise admin setbounds <minX> <maxX> <minY> <maxY> <minZ> <maxZ> " + ChatColor.GRAY + "- Set boundary box");
+        sender.sendMessage(ChatColor.YELLOW + "/advertise setFairMarketPrice <material> <amount> <diamond|diamond_block> <stack|shulker> " + ChatColor.GRAY + "- Set item price floor");
+    }
+
+    public boolean handleSetFairMarketPrice(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("cozy.advertise.admin")) {
+            sender.sendMessage(ChatColor.RED + "You do not have permission to set fair market prices.");
+            return true;
+        }
+        if (args.length != 5) {
+            sender.sendMessage(ChatColor.RED + "Usage: /advertise setFairMarketPrice <material> <amount> <diamond|diamond_block> <stack|shulker>");
+            return true;
+        }
+
+        Material material = Material.matchMaterial(args[1]);
+        if (material == null || material.isAir() || material == Material.DIAMOND || material == Material.DIAMOND_BLOCK) {
+            sender.sendMessage(ChatColor.RED + "Enter a valid saleable item material (currency items cannot be advertised).");
+            return true;
+        }
+
+        int amount;
+        try {
+            amount = Integer.parseInt(args[2]);
+            if (amount <= 0) {
+                sender.sendMessage(ChatColor.RED + "Fair market price amount must be greater than zero.");
+                return true;
+            }
+        } catch (NumberFormatException e) {
+            sender.sendMessage(ChatColor.RED + "Fair market price amount must be a positive whole number.");
+            return true;
+        }
+
+        String currency = args[3].toLowerCase();
+        if (!currency.equals("diamond") && !currency.equals("diamond_block")) {
+            sender.sendMessage(ChatColor.RED + "Currency must be diamond or diamond_block.");
+            return true;
+        }
+        String unit = args[4].toLowerCase();
+        if (!unit.equals("stack") && !unit.equals("shulker")) {
+            sender.sendMessage(ChatColor.RED + "Price basis must be stack or shulker.");
+            return true;
+        }
+
+        try {
+            plugin.getFairMarketPriceManager().setPrice(material, new FairMarketPrice(amount, currency, unit));
+            sender.sendMessage(ChatColor.GREEN + "Fair market price for " + material.name() + " saved: "
+                    + amount + " " + currency + " per " + unit + ".");
+        } catch (IOException e) {
+            sender.sendMessage(ChatColor.RED + "Could not save fair-market-prices.yml: " + e.getMessage());
+        }
+        return true;
     }
 
     private void handleReload(CommandSender sender) {

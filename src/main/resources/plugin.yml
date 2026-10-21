@@ -10,8 +10,7 @@ commands:
   advertise:
     description: Advertise and manage shopping district sales barrels
     aliases: [adv]
-    permission: cozy.advertise.use
-    usage: /advertise <help|start|stop|status|admin>
+    usage: /advertise <help|start|stop|status|admin|setFairMarketPrice>
 
 permissions:
   cozy.advertise.use:

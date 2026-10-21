@@ -1,13 +1,17 @@
 package com.cozy.advertisemod.command;
 
 import com.cozy.advertisemod.AdvertisePlugin;
+import com.cozy.advertisemod.fairmarket.FairMarketPrice;
+import com.cozy.advertisemod.fairmarket.FairMarketPriceCalculator;
 import com.cozy.advertisemod.model.AuditLog;
 import com.cozy.advertisemod.model.RegisteredBarrel;
 import com.cozy.advertisemod.model.ShopListing;
 import com.cozy.advertisemod.model.ShulkerContent;
+import com.cozy.advertisemod.scanner.BarrelScanner;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Barrel;
 import org.bukkit.command.Command;
@@ -43,6 +47,10 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length > 0 && args[0].equalsIgnoreCase("setFairMarketPrice")) {
+            return adminCommand.handleSetFairMarketPrice(sender, args);
+        }
+
         if (!sender.hasPermission("cozy.advertise.use")) {
             sender.sendMessage(ChatColor.RED + "You do not have permission to use /advertise.");
             return true;
@@ -78,6 +86,10 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(ChatColor.GRAY + "  Look at an advertised barrel within 5 blocks to unregister it.");
         sender.sendMessage(ChatColor.AQUA + "/advertise status");
         sender.sendMessage(ChatColor.GRAY + "  Look at a barrel within 5 blocks to view its stock, pricing, and audit logs.");
+        if (sender.hasPermission("cozy.advertise.admin")) {
+            sender.sendMessage(ChatColor.AQUA + "/advertise setFairMarketPrice <material> <amount> <diamond|diamond_block> <stack|shulker>");
+            sender.sendMessage(ChatColor.GRAY + "  Set and save an admin-only minimum advertising price.");
+        }
         sender.sendMessage(ChatColor.GOLD + "----------------------------------------");
         sender.sendMessage(ChatColor.GRAY + "• Currency exclusion: Diamonds & Diamond Blocks inside barrels are not listed.");
         sender.sendMessage(ChatColor.GRAY + "• Private items: Items whose name begins with '*' are hidden.");
@@ -141,6 +153,20 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
         String sellUnit = args[4].toLowerCase();
         if (!VALID_SELL_UNITS.contains(sellUnit)) {
             player.sendMessage(ChatColor.RED + "Invalid sell unit! Must be one of: " + VALID_SELL_UNITS);
+            return;
+        }
+
+        List<ShopListing> currentListings = BarrelScanner.scan(barrel.getInventory());
+        List<FairMarketPriceCalculator.Violation> priceViolations = FairMarketPriceCalculator.findViolations(
+                currentListings, priceAmount, priceUnit, sellAmount, sellUnit,
+                plugin.getFairMarketPriceManager());
+        if (!priceViolations.isEmpty()) {
+            player.sendMessage(ChatColor.RED + "Advert not registered: these items are below their fair market price:");
+            for (FairMarketPriceCalculator.Violation violation : priceViolations) {
+                FairMarketPrice floor = violation.floor();
+                player.sendMessage(ChatColor.RED + " • " + violation.material().name() + ": minimum "
+                        + floor.amount() + " " + floor.currency() + " per " + floor.unit());
+            }
             return;
         }
 
@@ -335,6 +361,30 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length > 0 && args[0].equalsIgnoreCase("setFairMarketPrice")) {
+            if (!sender.hasPermission("cozy.advertise.admin")) {
+                return Collections.emptyList();
+            }
+            if (args.length == 2) {
+                List<String> materials = new ArrayList<>();
+                for (Material material : Material.values()) {
+                    if (!material.isAir() && material != Material.DIAMOND && material != Material.DIAMOND_BLOCK) {
+                        materials.add(material.name());
+                    }
+                }
+                return filterMatching(materials, args[1]);
+            }
+            if (args.length == 3) {
+                return filterMatching(List.of("1", "8", "32", "64"), args[2]);
+            }
+            if (args.length == 4) {
+                return filterMatching(List.of("diamond", "diamond_block"), args[3]);
+            }
+            if (args.length == 5) {
+                return filterMatching(List.of("stack", "shulker"), args[4]);
+            }
+            return Collections.emptyList();
+        }
         if (!sender.hasPermission("cozy.advertise.use")) {
             return Collections.emptyList();
         }
@@ -343,6 +393,7 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
             List<String> subs = new ArrayList<>(List.of("help", "start", "stop", "status"));
             if (sender.hasPermission("cozy.advertise.admin")) {
                 subs.add("admin");
+                subs.add("setFairMarketPrice");
             }
             return filterMatching(subs, args[0]);
         }
