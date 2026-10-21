@@ -9,7 +9,7 @@ REQUIREMENTS SPECIFICATION: AdvertiseMod
 ================================================================================
 
 1. Executive Summary & Objective
-AdvertiseMod is a custom Paper/Folia-compatible Minecraft server plugin paired with an embedded HTTP microservice. It allows players on the Cozy Minecraft server to register Barrels as sales points within the server's Shopping District.
+AdvertiseMod is a custom Paper/Folia-compatible Minecraft server plugin paired with an embedded HTTP microservice. It allows players on the AdvertiseMod Minecraft server to register Barrels as sales points within the server's Shopping District.
 
 The plugin continuously monitors stock levels (including deep-scanning the contents of Shulker Boxes inside barrels) and exposes a REST API and searchable web frontend, enabling players to find items, check stock levels, compare prices, and locate shops via the server's website.
 
@@ -75,7 +75,7 @@ Boundary & Dimension Validation Logic:
 4. Commands, Syntax & Permissions
 
 Player Commands (/advertise or alias /adv):
-Permission: cozy.advertise.use (Default: true)
+Permission: advertisemod.use (Default: true)
 
 1. /advertise help
    - Displays an in-game formatted guide detailing command syntax, registration rules, fair market price behavior, currency rules, and allowed shopping district boundaries.
@@ -104,7 +104,7 @@ Permission: cozy.advertise.use (Default: true)
    - If the targeted block is not a BARREL, or no block is targeted within 5 blocks, show an error.
 
 5. /advertise setFairMarketPrice <material> <amount> <diamond|diamond_block> <stack|shulker>
-   - This root command MUST require the `cozy.advertise.admin` permission. This permission defaults to operators (`op`) and can also be granted by a server permissions plugin.
+   - This root command MUST require the `advertisemod.admin` permission. This permission defaults to operators (`op`) and can also be granted by a server permissions plugin.
    - `<material>` is a valid saleable Minecraft material. DIAMOND and DIAMOND_BLOCK are excluded currencies and cannot have fair market prices.
    - `<amount>` is a positive whole number. `<stack|shulker>` defines the quantity the amount covers.
    - A stack uses the material's vanilla maximum stack size (normally 64, 16, or 1). A shulker uses 27 stacks at that material's vanilla maximum stack size.
@@ -112,7 +112,7 @@ Permission: cozy.advertise.use (Default: true)
    - Admins may bulk edit the same file. `/advertise admin reload` MUST reload those prices without restarting the server.
 
 Admin Commands (/advertise admin <subcommand>):
-Permission: cozy.advertise.admin (Default: op)
+Permission: advertisemod.admin (Default: op)
 
 - /advertise admin reload
   * Reloads config.yml (bounds, dimensions, limits, scan interval) without restarting the server.
