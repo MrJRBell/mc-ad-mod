@@ -15,8 +15,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.inventory.Inventory;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -77,9 +75,9 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(ChatColor.DARK_GRAY + "  Price Units: " + ChatColor.WHITE + "diamond, diamond_block");
         sender.sendMessage(ChatColor.DARK_GRAY + "  Sell Units: " + ChatColor.WHITE + "item, stack, shulker");
         sender.sendMessage(ChatColor.AQUA + "/advertise stop");
-        sender.sendMessage(ChatColor.GRAY + "  Unregister any advertised barrel you are looking into.");
+        sender.sendMessage(ChatColor.GRAY + "  Look at an advertised barrel within 5 blocks to unregister it.");
         sender.sendMessage(ChatColor.AQUA + "/advertise status");
-        sender.sendMessage(ChatColor.GRAY + "  View live stock, pricing, and audit logs of the open barrel.");
+        sender.sendMessage(ChatColor.GRAY + "  Look at a barrel within 5 blocks to view its stock, pricing, and audit logs.");
         sender.sendMessage(ChatColor.GOLD + "----------------------------------------");
         sender.sendMessage(ChatColor.GRAY + "• Currency exclusion: Diamonds & Diamond Blocks inside barrels are not listed.");
         sender.sendMessage(ChatColor.GRAY + "• Private items: Items whose name begins with '*' are hidden.");
@@ -104,9 +102,8 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
         }
 
         // Resolve the barrel the player is looking at, so registration works with its inventory closed.
-        Block targetBlock = player.getTargetBlockExact(5);
-        if (targetBlock == null || !(targetBlock.getState() instanceof Barrel barrel)) {
-            player.sendMessage(ChatColor.RED + "You must be looking at a Barrel within 5 blocks to advertise it.");
+        Barrel barrel = getTargetBarrel(player);
+        if (barrel == null) {
             return;
         }
 
@@ -223,9 +220,8 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        Inventory openInv = player.getOpenInventory().getTopInventory();
-        if (openInv.getType() != InventoryType.BARREL || !(openInv.getHolder() instanceof Barrel barrel)) {
-            player.sendMessage(ChatColor.RED + "You must have an advertised Barrel open to unregister it!");
+        Barrel barrel = getTargetBarrel(player);
+        if (barrel == null) {
             return;
         }
 
@@ -270,9 +266,8 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        Inventory openInv = player.getOpenInventory().getTopInventory();
-        if (openInv.getType() != InventoryType.BARREL || !(openInv.getHolder() instanceof Barrel barrel)) {
-            player.sendMessage(ChatColor.RED + "You must have an advertised Barrel open to check its status!");
+        Barrel barrel = getTargetBarrel(player);
+        if (barrel == null) {
             return;
         }
 
@@ -326,6 +321,16 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
                 }
             }
         });
+    }
+
+    /** Returns the barrel the player is looking at, or reports that no barrel is targeted. */
+    private Barrel getTargetBarrel(Player player) {
+        Block targetBlock = player.getTargetBlockExact(5);
+        if (targetBlock == null || !(targetBlock.getState() instanceof Barrel barrel)) {
+            player.sendMessage(ChatColor.RED + "You must be looking at a Barrel within 5 blocks.");
+            return null;
+        }
+        return barrel;
     }
 
     @Override

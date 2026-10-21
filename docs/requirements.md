@@ -95,11 +95,12 @@ Permission: cozy.advertise.use (Default: true)
      * [shop_name]: Optional trailing String (e.g., "The Diamond Den").
 
 3. /advertise stop
-   - Universal Unregister: Any player can run this command while having an advertised barrel open to unregister it (e.g., cleaning up abandoned/empty shops).
+   - Universal Unregister: Any player can run this command while looking directly at an advertised BARREL block within 5 blocks. Its inventory does not need to be open. If the target is not a BARREL, show an error and do not unregister anything.
    - Appends an unregistration record in SQLite audit_logs under action 'UNREGISTER_BY_PLAYER'.
 
 4. /advertise status
-   - Displays the advertisement status, shop name, price rule, remaining item count, and recent audit history for the currently open barrel.
+   - While the player is looking directly at a BARREL block within 5 blocks, displays its advertisement status, shop name, price rule, remaining item count, and recent audit history. Its inventory does not need to be open.
+   - If the targeted block is not a BARREL, or no block is targeted within 5 blocks, show an error.
 
 Admin Commands (/advertise admin <subcommand>):
 Permission: cozy.advertise.admin (Default: op)
