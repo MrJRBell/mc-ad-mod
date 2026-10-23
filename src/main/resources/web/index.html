@@ -273,6 +273,13 @@
             color: var(--text-muted);
         }
 
+        .fair-market-note {
+            margin-top: 10px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            line-height: 1.4;
+        }
+
         .shops-grid {
             column-width: 421px;
             column-gap: 22px;
@@ -605,6 +612,7 @@
         }
 
         .empty-state {
+            column-span: all;
             text-align: center;
             padding: 60px 20px;
             background-color: var(--bg-secondary);
@@ -718,6 +726,9 @@
                     Loading shop catalog...
                 </div>
             </div>
+            <p class="fair-market-note">
+                Advertised prices follow the Fair Market Price. If a registered price is below the minimum, the item will be advertised at the Fair Market Price instead.
+            </p>
         </section>
 
         <section class="shops-grid" id="shops-grid">
