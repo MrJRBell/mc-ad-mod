@@ -280,6 +280,7 @@
         }
 
         .shop-card {
+            min-width: 0;
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 16px;
@@ -309,12 +310,15 @@
             align-items: flex-start;
             justify-content: space-between;
             gap: 14px;
+            flex-wrap: wrap;
         }
 
         .shop-title-area {
             display: flex;
             align-items: center;
             gap: 12px;
+            flex: 1 1 200px;
+            min-width: 0;
         }
 
         .owner-avatar {
@@ -344,7 +348,11 @@
             padding: 6px 12px;
             border-radius: 10px;
             text-align: right;
-            white-space: nowrap;
+            box-sizing: border-box;
+            max-width: 100%;
+            min-width: 0;
+            white-space: normal;
+            overflow-wrap: anywhere;
         }
 
         .price-title {
@@ -775,6 +783,12 @@
                 .join(' ');
         }
 
+        function formatPriceUnit(rawUnit) {
+            if (rawUnit && rawUnit.toLowerCase() === 'diamond_block') return 'Diamond Blocks';
+            if (rawUnit && rawUnit.toLowerCase() === 'diamond') return 'Diamonds';
+            return formatItemName(rawUnit);
+        }
+
         // Filter and Render
         function renderShops() {
             const query = searchQuery.trim().toLowerCase();
@@ -868,7 +882,6 @@
                 const loc = shop.location || { world: 'world', x: 0, y: 0, z: 0 };
                 const coordsText = `${loc.world} (${loc.x}, ${loc.y}, ${loc.z})`;
                 const tpCommand = `/tp ${loc.x} ${loc.y} ${loc.z}`;
-                const pricing = shop.pricing || { price_amount: 1, price_unit: 'diamond', sell_amount: 1, sell_unit: 'item' };
 
                 return `
                     <div class="shop-card ${shop.hasDeepMatch ? 'has-match' : ''}">
@@ -886,10 +899,7 @@
                                 </div>
                             </div>
                             <div class="price-badge">
-                                <div class="price-title">Price Rule</div>
-                                <div class="price-value">
-                                    ${pricing.price_amount} ${formatItemName(pricing.price_unit)} / ${pricing.sell_amount} ${pricing.sell_unit}
-                                </div>
+                                <div class="price-title">Item prices include fair market floors</div>
                             </div>
                         </div>
 
@@ -914,7 +924,7 @@
         function renderListingItem(listing, query) {
             const effectivePricing = listing.effective_pricing;
             const effectivePriceText = effectivePricing
-                ? `${effectivePricing.price_amount} ${formatItemName(effectivePricing.price_unit)} / ${effectivePricing.sell_amount} ${effectivePricing.sell_unit}`
+                ? `${effectivePricing.price_amount} ${formatPriceUnit(effectivePricing.price_unit)} / ${effectivePricing.sell_amount} ${effectivePricing.sell_unit}`
                 : '';
             const effectivePriceBadge = effectivePricing
                 ? `<span class="effective-price">${escapeHtml(effectivePriceText)}${effectivePricing.fair_market_floor_applied ? '<span class="fair-market-tag">Fair market floor</span>' : ''}</span>`
@@ -945,7 +955,7 @@
                                     const innerFormatted = formatItemName(inner.item);
                                     const innerPricing = inner.effective_pricing;
                                     const innerPriceText = innerPricing
-                                        ? `${innerPricing.price_amount} ${formatItemName(innerPricing.price_unit)} / ${innerPricing.sell_amount} ${innerPricing.sell_unit}`
+                                        ? `${innerPricing.price_amount} ${formatPriceUnit(innerPricing.price_unit)} / ${innerPricing.sell_amount} ${innerPricing.sell_unit}`
                                         : '';
                                     const isInnerMatch = query && (
                                         innerFormatted.toLowerCase().includes(query) ||

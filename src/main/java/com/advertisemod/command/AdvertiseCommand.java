@@ -34,7 +34,7 @@ import java.util.Set;
  */
 public class AdvertiseCommand implements CommandExecutor, TabCompleter {
 
-    private static final Set<String> VALID_PRICE_UNITS = Set.of("diamond", "diamond_block");
+    private static final Set<String> VALID_PRICE_UNITS = Set.of("diamond", "diamonds", "diamond_block", "diamond_blocks");
     private static final Set<String> VALID_SELL_UNITS = Set.of("item", "stack", "shulker");
 
     private final AdvertisePlugin plugin;
@@ -80,14 +80,14 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(ChatColor.AQUA + "/advertise start <price> <unit> <sell_amount> <sell_unit> [shop_name]");
         sender.sendMessage(ChatColor.GRAY + "  Look at a barrel and run this command to register it as a shop listing.");
         sender.sendMessage(ChatColor.GRAY + "  The barrel must be within 5 blocks; looking at anything else shows an error.");
-        sender.sendMessage(ChatColor.DARK_GRAY + "  Price Units: " + ChatColor.WHITE + "diamond, diamond_block");
+        sender.sendMessage(ChatColor.DARK_GRAY + "  Price Units: " + ChatColor.WHITE + "diamonds (diamond), diamond_blocks (diamond_block)");
         sender.sendMessage(ChatColor.DARK_GRAY + "  Sell Units: " + ChatColor.WHITE + "item, stack, shulker");
         sender.sendMessage(ChatColor.AQUA + "/advertise stop");
         sender.sendMessage(ChatColor.GRAY + "  Look at an advertised barrel within 5 blocks to unregister it.");
         sender.sendMessage(ChatColor.AQUA + "/advertise status");
         sender.sendMessage(ChatColor.GRAY + "  Look at a barrel within 5 blocks to view its stock, pricing, and audit logs.");
         if (sender.hasPermission("advertisemod.admin")) {
-            sender.sendMessage(ChatColor.AQUA + "/advertise setFairMarketPrice <material> <amount> <diamond|diamond_block> <stack|shulker>");
+            sender.sendMessage(ChatColor.AQUA + "/advertise setFairMarketPrice <material> <amount> <diamonds|diamond_blocks> <stack|shulker>");
             sender.sendMessage(ChatColor.GRAY + "  Set and save an admin-only minimum advertising price.");
         }
         sender.sendMessage(ChatColor.GOLD + "----------------------------------------");
@@ -135,11 +135,12 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        String priceUnit = args[2].toLowerCase();
-        if (!VALID_PRICE_UNITS.contains(priceUnit)) {
-            player.sendMessage(ChatColor.RED + "Invalid price unit! Must be one of: " + VALID_PRICE_UNITS);
+        String suppliedPriceUnit = args[2].toLowerCase();
+        if (!VALID_PRICE_UNITS.contains(suppliedPriceUnit)) {
+            player.sendMessage(ChatColor.RED + "Invalid price unit! Use diamonds or diamond_blocks.");
             return;
         }
+        String priceUnit = normalizePriceUnit(suppliedPriceUnit);
 
         int sellAmount;
         try {
@@ -222,7 +223,7 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
             try {
                 plugin.getDatabaseManager().saveOrUpdateBarrel(registeredBarrel);
                 String action = isUpdate ? "PRICE_CHANGE" : "REGISTER";
-                String details = priceAmount + " " + priceUnit + " for " + sellAmount + " " + sellUnit + " ('" + shopName + "')";
+                String details = priceAmount + " " + displayPriceUnit(priceUnit) + " for " + sellAmount + " " + sellUnit + " ('" + shopName + "')";
                 plugin.getDatabaseManager().logAudit(barrelId, player.getUniqueId().toString(), player.getName(), action, details);
 
                 // Trigger instant stock re-scan on RegionScheduler
@@ -230,7 +231,7 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
 
                 player.sendMessage(ChatColor.GREEN + "✔ Shop successfully " + (isUpdate ? "updated" : "registered") + "!");
                 player.sendMessage(ChatColor.YELLOW + "Shop: " + ChatColor.WHITE + shopName);
-                player.sendMessage(ChatColor.YELLOW + "Price: " + ChatColor.AQUA + priceAmount + " " + priceUnit
+                player.sendMessage(ChatColor.YELLOW + "Price: " + ChatColor.AQUA + priceAmount + " " + displayPriceUnit(priceUnit)
                         + ChatColor.YELLOW + " for " + ChatColor.AQUA + sellAmount + " " + sellUnit);
                 player.sendMessage(ChatColor.GRAY + "Location: " + worldName + " (" + x + ", " + y + ", " + z + ")");
                 player.sendMessage(ChatColor.GRAY + "View live on the server shopping web portal!");
@@ -318,7 +319,7 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(ChatColor.GOLD + "=== [ Shop Barrel Status ] ===");
             player.sendMessage(ChatColor.YELLOW + "Shop Name: " + ChatColor.WHITE + shop.getShopName());
             player.sendMessage(ChatColor.YELLOW + "Owner: " + ChatColor.WHITE + shop.getOwnerName());
-            player.sendMessage(ChatColor.YELLOW + "Pricing: " + ChatColor.AQUA + shop.getPriceAmount() + " " + shop.getPriceUnit()
+            player.sendMessage(ChatColor.YELLOW + "Pricing: " + ChatColor.AQUA + shop.getPriceAmount() + " " + displayPriceUnit(shop.getPriceUnit())
                     + ChatColor.YELLOW + " for " + ChatColor.AQUA + shop.getSellAmount() + " " + shop.getSellUnit());
             player.sendMessage(ChatColor.YELLOW + "Coordinates: " + ChatColor.GRAY + shop.getWorld() + " (" + shop.getX() + ", " + shop.getY() + ", " + shop.getZ() + ")");
 
@@ -378,7 +379,7 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
                 return filterMatching(List.of("1", "8", "32", "64"), args[2]);
             }
             if (args.length == 4) {
-                return filterMatching(List.of("diamond", "diamond_block"), args[3]);
+                return filterMatching(List.of("diamonds", "diamond_blocks", "diamond", "diamond_block"), args[3]);
             }
             if (args.length == 5) {
                 return filterMatching(List.of("stack", "shulker"), args[4]);
@@ -425,5 +426,13 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
             }
         }
         return matches;
+    }
+
+    private static String normalizePriceUnit(String unit) {
+        return unit.equals("diamonds") ? "diamond" : unit.equals("diamond_blocks") ? "diamond_block" : unit;
+    }
+
+    private static String displayPriceUnit(String unit) {
+        return unit.equals("diamond_block") ? "diamond blocks" : "diamonds";
     }
 }

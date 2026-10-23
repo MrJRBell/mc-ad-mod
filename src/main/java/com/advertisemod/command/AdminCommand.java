@@ -56,7 +56,7 @@ public class AdminCommand {
         sender.sendMessage(ChatColor.YELLOW + "/advertise admin remove <world> <x> <y> <z> " + ChatColor.GRAY + "- Force remove shop barrel");
         sender.sendMessage(ChatColor.YELLOW + "/advertise admin setlimit <player|default> <amount> " + ChatColor.GRAY + "- Update barrel limit");
         sender.sendMessage(ChatColor.YELLOW + "/advertise admin setbounds <minX> <maxX> <minY> <maxY> <minZ> <maxZ> " + ChatColor.GRAY + "- Set boundary box");
-        sender.sendMessage(ChatColor.YELLOW + "/advertise setFairMarketPrice <material> <amount> <diamond|diamond_block> <stack|shulker> " + ChatColor.GRAY + "- Set item price floor");
+        sender.sendMessage(ChatColor.YELLOW + "/advertise setFairMarketPrice <material> <amount> <diamonds|diamond_blocks> <stack|shulker> " + ChatColor.GRAY + "- Set item price floor");
     }
 
     public boolean handleSetFairMarketPrice(CommandSender sender, String[] args) {
@@ -65,7 +65,7 @@ public class AdminCommand {
             return true;
         }
         if (args.length != 5) {
-            sender.sendMessage(ChatColor.RED + "Usage: /advertise setFairMarketPrice <material> <amount> <diamond|diamond_block> <stack|shulker>");
+            sender.sendMessage(ChatColor.RED + "Usage: /advertise setFairMarketPrice <material> <amount> <diamonds|diamond_blocks> <stack|shulker>");
             return true;
         }
 
@@ -87,11 +87,14 @@ public class AdminCommand {
             return true;
         }
 
-        String currency = args[3].toLowerCase();
-        if (!currency.equals("diamond") && !currency.equals("diamond_block")) {
-            sender.sendMessage(ChatColor.RED + "Currency must be diamond or diamond_block.");
+        String suppliedCurrency = args[3].toLowerCase();
+        if (!suppliedCurrency.equals("diamond") && !suppliedCurrency.equals("diamonds")
+                && !suppliedCurrency.equals("diamond_block") && !suppliedCurrency.equals("diamond_blocks")) {
+            sender.sendMessage(ChatColor.RED + "Currency must be diamonds or diamond_blocks.");
             return true;
         }
+        String currency = suppliedCurrency.equals("diamonds") ? "diamond"
+                : suppliedCurrency.equals("diamond_blocks") ? "diamond_block" : suppliedCurrency;
         String unit = args[4].toLowerCase();
         if (!unit.equals("stack") && !unit.equals("shulker")) {
             sender.sendMessage(ChatColor.RED + "Price basis must be stack or shulker.");
@@ -101,11 +104,15 @@ public class AdminCommand {
         try {
             plugin.getFairMarketPriceManager().setPrice(material, new FairMarketPrice(amount, currency, unit));
             sender.sendMessage(ChatColor.GREEN + "Fair market price for " + material.name() + " saved: "
-                    + amount + " " + currency + " per " + unit + ".");
+                    + amount + " " + displayCurrency(currency) + " per " + unit + ".");
         } catch (IOException e) {
             sender.sendMessage(ChatColor.RED + "Could not save fair-market-prices.yml: " + e.getMessage());
         }
         return true;
+    }
+
+    private static String displayCurrency(String currency) {
+        return currency.equals("diamond_block") ? "diamond blocks" : "diamonds";
     }
 
     private void handleReload(CommandSender sender) {

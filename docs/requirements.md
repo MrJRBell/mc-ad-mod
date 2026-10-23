@@ -90,7 +90,7 @@ Permission: advertisemod.use (Default: true)
      * Every saleable material currently in the barrel, including materials inside shulker boxes, MUST meet its configured fair market price. If any item is below its floor, reject the registration or update and name the offending materials and floors.
    - Arguments & Tab Completion (Brigadier/Paper API):
      * <price_amount>: Positive Integer.
-     * <price_unit>: Enum [diamond, diamond_block].
+     * <price_unit>: Enum [diamonds, diamond_blocks]. The legacy singular forms remain accepted for compatibility.
      * <sell_amount>: Positive Integer.
      * <sell_unit>: Enum [item, stack, shulker].
      * [shop_name]: Optional trailing String (e.g., "The Diamond Den").
@@ -103,7 +103,7 @@ Permission: advertisemod.use (Default: true)
    - While the player is looking directly at a BARREL block within 5 blocks, displays its advertisement status, shop name, price rule, remaining item count, and recent audit history. Its inventory does not need to be open.
    - If the targeted block is not a BARREL, or no block is targeted within 5 blocks, show an error.
 
-5. /advertise setFairMarketPrice <material> <amount> <diamond|diamond_block> <stack|shulker>
+5. /advertise setFairMarketPrice <material> <amount> <diamonds|diamond_blocks> <stack|shulker>
    - This root command MUST require the `advertisemod.admin` permission. This permission defaults to operators (`op`) and can also be granted by a server permissions plugin.
    - `<material>` is a valid saleable Minecraft material. DIAMOND and DIAMOND_BLOCK are excluded currencies and cannot have fair market prices.
    - `<amount>` is a positive whole number. `<stack|shulker>` defines the quantity the amount covers.
