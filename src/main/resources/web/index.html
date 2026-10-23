@@ -269,18 +269,14 @@
 
         .shops-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(421px, 1fr));
             gap: 22px;
-        }
-
-        @media (max-width: 500px) {
-            .shops-grid {
-                grid-template-columns: 1fr;
-            }
+            overflow-x: auto;
         }
 
         .shop-card {
-            min-width: 0;
+            width: 100%;
+            min-width: 421px;
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 16px;
