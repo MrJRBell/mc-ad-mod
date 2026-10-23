@@ -15,6 +15,7 @@ public class RegisteredBarrel {
     private final int z;
     private final UUID ownerUuid;
     private final String ownerName;
+    private final String ownerSkinTexture;
     private String shopName;
     private int priceAmount;
     private String priceUnit;
@@ -26,6 +27,14 @@ public class RegisteredBarrel {
                             UUID ownerUuid, String ownerName, String shopName,
                             int priceAmount, String priceUnit, int sellAmount,
                             String sellUnit, String createdAt) {
+        this(id, world, x, y, z, ownerUuid, ownerName, shopName, priceAmount,
+                priceUnit, sellAmount, sellUnit, createdAt, null);
+    }
+
+    public RegisteredBarrel(String id, String world, int x, int y, int z,
+                            UUID ownerUuid, String ownerName, String shopName,
+                            int priceAmount, String priceUnit, int sellAmount,
+                            String sellUnit, String createdAt, String ownerSkinTexture) {
         this.id = id;
         this.world = world;
         this.x = x;
@@ -33,6 +42,7 @@ public class RegisteredBarrel {
         this.z = z;
         this.ownerUuid = ownerUuid;
         this.ownerName = ownerName;
+        this.ownerSkinTexture = ownerSkinTexture;
         this.shopName = shopName;
         this.priceAmount = priceAmount;
         this.priceUnit = priceUnit;
@@ -74,6 +84,10 @@ public class RegisteredBarrel {
 
     public String getOwnerName() {
         return ownerName;
+    }
+
+    public String getOwnerSkinTexture() {
+        return ownerSkinTexture;
     }
 
     public String getShopName() {

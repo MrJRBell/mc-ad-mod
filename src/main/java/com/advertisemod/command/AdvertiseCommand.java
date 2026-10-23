@@ -20,6 +20,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
+import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -191,6 +192,8 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
         }
 
         String barrelId = RegisteredBarrel.formatId(worldName, x, y, z);
+        URL playerSkin = player.getPlayerProfile().getTextures().getSkin();
+        String ownerSkinTexture = playerSkin == null ? null : playerSkin.toExternalForm();
 
         // 4. Concurrency-safe Database operations on Folia AsyncScheduler
         Bukkit.getAsyncScheduler().runNow(plugin, task -> {
@@ -217,7 +220,7 @@ public class AdvertiseCommand implements CommandExecutor, TabCompleter {
                     barrelId, worldName, x, y, z,
                     player.getUniqueId(), player.getName(), shopName,
                     priceAmount, priceUnit, sellAmount, sellUnit,
-                    null
+                    null, ownerSkinTexture
             );
 
             try {

@@ -64,6 +64,7 @@ public class DatabaseManager {
                     z INT NOT NULL,
                     owner_uuid TEXT NOT NULL,
                     owner_name TEXT NOT NULL,
+                    owner_skin_texture TEXT,
                     shop_name TEXT,
                     price_amount INT NOT NULL,
                     price_unit TEXT NOT NULL,
@@ -87,6 +88,20 @@ public class DatabaseManager {
 
             stmt.execute("CREATE INDEX IF NOT EXISTS idx_owner_uuid ON registered_barrels(owner_uuid);");
             stmt.execute("CREATE INDEX IF NOT EXISTS idx_audit_barrel_id ON audit_logs(barrel_id);");
+
+            // Upgrade databases created before skin texture capture was added.
+            boolean hasSkinTextureColumn = false;
+            try (ResultSet columns = stmt.executeQuery("PRAGMA table_info(registered_barrels)")) {
+                while (columns.next()) {
+                    if ("owner_skin_texture".equalsIgnoreCase(columns.getString("name"))) {
+                        hasSkinTextureColumn = true;
+                        break;
+                    }
+                }
+            }
+            if (!hasSkinTextureColumn) {
+                stmt.execute("ALTER TABLE registered_barrels ADD COLUMN owner_skin_texture TEXT");
+            }
         }
 
         plugin.getLogger().info("SQLite database initialized successfully at: " + dbFile.getName());
@@ -107,11 +122,12 @@ public class DatabaseManager {
         String sql = """
             INSERT INTO registered_barrels (
                 id, world, x, y, z, owner_uuid, owner_name, shop_name,
-                price_amount, price_unit, sell_amount, sell_unit
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                owner_skin_texture, price_amount, price_unit, sell_amount, sell_unit
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 owner_uuid = excluded.owner_uuid,
                 owner_name = excluded.owner_name,
+                owner_skin_texture = excluded.owner_skin_texture,
                 shop_name = excluded.shop_name,
                 price_amount = excluded.price_amount,
                 price_unit = excluded.price_unit,
@@ -128,10 +144,11 @@ public class DatabaseManager {
             ps.setString(6, barrel.getOwnerUuid().toString());
             ps.setString(7, barrel.getOwnerName());
             ps.setString(8, barrel.getShopName());
-            ps.setInt(9, barrel.getPriceAmount());
-            ps.setString(10, barrel.getPriceUnit());
-            ps.setInt(11, barrel.getSellAmount());
-            ps.setString(12, barrel.getSellUnit());
+            ps.setString(9, barrel.getOwnerSkinTexture());
+            ps.setInt(10, barrel.getPriceAmount());
+            ps.setString(11, barrel.getPriceUnit());
+            ps.setInt(12, barrel.getSellAmount());
+            ps.setString(13, barrel.getSellUnit());
             ps.executeUpdate();
         }
     }
@@ -259,7 +276,8 @@ public class DatabaseManager {
                 rs.getString("price_unit"),
                 rs.getInt("sell_amount"),
                 rs.getString("sell_unit"),
-                rs.getString("created_at")
+                rs.getString("created_at"),
+                rs.getString("owner_skin_texture")
         );
     }
 

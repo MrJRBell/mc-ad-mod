@@ -20,6 +20,9 @@ public class ShopFeedItem {
     @SerializedName("owner_uuid")
     private final String ownerUuid;
 
+    @SerializedName("owner_skin_texture")
+    private final String ownerSkinTexture;
+
     @SerializedName("location")
     private final LocationDto location;
 
@@ -30,11 +33,13 @@ public class ShopFeedItem {
     private final List<ShopListing> listings;
 
     public ShopFeedItem(String barrelId, String shopName, String ownerName, String ownerUuid,
-                        LocationDto location, PricingDto pricing, List<ShopListing> listings) {
+                        String ownerSkinTexture, LocationDto location, PricingDto pricing,
+                        List<ShopListing> listings) {
         this.barrelId = barrelId;
         this.shopName = shopName;
         this.ownerName = ownerName;
         this.ownerUuid = ownerUuid;
+        this.ownerSkinTexture = ownerSkinTexture;
         this.location = location;
         this.pricing = pricing;
         this.listings = listings;
@@ -53,6 +58,7 @@ public class ShopFeedItem {
                 barrel.getShopName(),
                 barrel.getOwnerName(),
                 barrel.getOwnerUuid().toString(),
+                barrel.getOwnerSkinTexture(),
                 loc,
                 pricing,
                 listings
@@ -73,6 +79,10 @@ public class ShopFeedItem {
 
     public String getOwnerUuid() {
         return ownerUuid;
+    }
+
+    public String getOwnerSkinTexture() {
+        return ownerSkinTexture;
     }
 
     public LocationDto getLocation() {

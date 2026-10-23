@@ -359,6 +359,16 @@
             color: var(--text-secondary);
         }
 
+        .barrel-inventory {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
+            padding: 9px;
+            background-color: rgba(15, 17, 23, 0.28);
+        }
+
         .btn-copy-coords {
             background: transparent;
             border: none;
@@ -760,7 +770,7 @@
         }
 
         function updateStats() {
-            statShopsCount.textContent = allShops.length;
+            statShopsCount.textContent = new Set(allShops.map(getShopGroupKey)).size;
             let totalListings = 0;
             allShops.forEach(shop => {
                 if (shop.listings) {
@@ -768,6 +778,12 @@
                 }
             });
             statItemsCount.textContent = totalListings;
+        }
+
+        function getShopGroupKey(shop) {
+            const shopName = (shop.shop_name || 'Shopping Barrel').trim().toLowerCase();
+            const ownerKey = (shop.owner_uuid || shop.owner_name || '').toLowerCase();
+            return JSON.stringify([ownerKey, shopName]);
         }
 
         // Format Minecraft names nicely (e.g. DIAMOND_HELMET -> Diamond Helmet)
@@ -783,6 +799,11 @@
             if (rawUnit && rawUnit.toLowerCase() === 'diamond_block') return 'Diamond Blocks';
             if (rawUnit && rawUnit.toLowerCase() === 'diamond') return 'Diamonds';
             return formatItemName(rawUnit);
+        }
+
+        function getSkinTextureId(textureUrl) {
+            const match = String(textureUrl || '').match(/textures\.minecraft\.net\/texture\/([a-f0-9]{32,64})/i);
+            return match ? match[1] : null;
         }
 
         function renderItemIcon(material, displayName, className) {
@@ -801,9 +822,14 @@
             return `<img class="${className}" src="${escapeHtml(iconUrl)}" alt="${escapeHtml(displayName)} icon" loading="lazy" onerror="this.hidden=true">`;
         }
 
-        function fallbackOwnerAvatar(image, playerId) {
-            if (!image.dataset.avatarFallback) {
-                image.dataset.avatarFallback = '1';
+        function fallbackOwnerAvatar(image, playerName, playerId) {
+            if (image.dataset.avatarStage === 'texture') {
+                image.dataset.avatarStage = 'username';
+                image.src = `https://mc-heads.net/avatar/${playerName}/40`;
+                return;
+            }
+            if (image.dataset.avatarStage === 'username') {
+                image.dataset.avatarStage = 'uuid';
                 image.src = `https://crafatar.imc.moe/avatars/${playerId}?size=40&overlay`;
                 return;
             }
@@ -890,8 +916,7 @@
             const groupedShops = new Map();
             matchedShops.forEach(shop => {
                 const shopName = (shop.shop_name || 'Shopping Barrel').trim();
-                const ownerKey = (shop.owner_uuid || shop.owner_name || '').toLowerCase();
-                const groupKey = JSON.stringify([ownerKey, shopName.toLowerCase()]);
+                const groupKey = getShopGroupKey(shop);
                 if (!groupedShops.has(groupKey)) {
                     groupedShops.set(groupKey, { ...shop, shop_name: shopName, barrels: [], hasDeepMatch: false });
                 }
@@ -916,13 +941,18 @@
 
             // Render cards
             shopsGrid.innerHTML = shopGroups.map(shop => {
+                const skinTextureId = getSkinTextureId(shop.owner_skin_texture);
+                const avatarUrl = skinTextureId
+                    ? `https://mc-heads.net/avatar/${skinTextureId}/40`
+                    : `https://mc-heads.net/avatar/${encodeURIComponent(shop.owner_name || '')}/40`;
                 return `
                     <div class="shop-card ${shop.hasDeepMatch ? 'has-match' : ''}">
                         <div class="card-header">
                             <div class="shop-title-area">
                                 <img
-                                    src="https://mc-heads.net/avatar/${encodeURIComponent(shop.owner_name || '')}/40"
-                                    onerror="fallbackOwnerAvatar(this, '${encodeURIComponent(shop.owner_uuid || '')}')"
+                                    src="${avatarUrl}"
+                                    data-avatar-stage="${skinTextureId ? 'texture' : 'username'}"
+                                    onerror="fallbackOwnerAvatar(this, '${encodeURIComponent(shop.owner_name || '')}', '${encodeURIComponent(shop.owner_uuid || '')}')"
                                     alt="${escapeHtml(shop.owner_name)}"
                                     class="owner-avatar"
                                 >
@@ -938,14 +968,15 @@
                             ${shop.barrels.map(barrel => {
                                 const loc = barrel.location || { world: 'world', x: 0, y: 0, z: 0 };
                                 const coordsText = `${loc.world} (${loc.x}, ${loc.y}, ${loc.z})`;
-                                const tpCommand = `/tp ${loc.x} ${loc.y} ${loc.z}`;
                                 return `
-                                    <div class="location-bar">
-                                        <span>📍 ${escapeHtml(coordsText)}</span>
-                                        <button class="btn-copy-coords" onclick="copyToClipboard('${escapeHtml(tpCommand)}')">Copy /tp</button>
-                                    </div>
-                                    <div class="listing-items">
-                                        ${barrel.filteredListings.map(item => renderListingItem(item, query)).join('')}
+                                    <div class="barrel-inventory">
+                                        <div class="location-bar">
+                                            <span>📍 ${escapeHtml(coordsText)}</span>
+                                            <button class="btn-copy-coords" onclick="copyToClipboard('${escapeHtml(coordsText)}')">Copy location</button>
+                                        </div>
+                                        <div class="listing-items">
+                                            ${barrel.filteredListings.map(item => renderListingItem(item, query)).join('')}
+                                        </div>
                                     </div>
                                 `;
                             }).join('')}
