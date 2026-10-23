@@ -131,6 +131,12 @@
             animation: pulse 2s infinite;
         }
 
+        .live-sync-toggle { cursor: pointer; font: inherit; }
+        .live-sync-toggle:hover, .live-sync-toggle:focus-visible { border-color: var(--accent-emerald); outline: none; }
+        .live-sync-toggle[aria-pressed="false"] .live-indicator {
+            background-color: var(--text-secondary); box-shadow: none; animation: none;
+        }
+
         @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.4; transform: scale(0.85); }
@@ -398,13 +404,6 @@
             margin-left: auto;
             text-align: right;
         }
-        .fair-market-tag {
-            color: #f7c873;
-            display: block;
-            font-size: 0.68rem;
-            font-weight: 500;
-        }
-
         .regular-item-badge {
             background-color: var(--bg-primary);
             border: 1px solid var(--border-color);
@@ -661,10 +660,11 @@
             </a>
 
             <div class="header-stats">
-                <div class="stat-badge">
+                <button class="stat-badge live-sync-toggle" id="live-sync-toggle" type="button"
+                    aria-pressed="true" title="Pause automatic refresh">
                     <span class="live-indicator"></span>
-                    <span>Live Sync</span>
-                </div>
+                    <span id="live-sync-label">Live Sync: On</span>
+                </button>
                 <div class="stat-badge">
                     <span>Shops:</span>
                     <strong id="stat-shops-count">0</strong>
@@ -721,12 +721,16 @@
         let allShops = [];
         let currentFilter = 'all';
         let searchQuery = '';
+        let liveRefreshEnabled = true;
+        let liveRefreshTimer = null;
 
         const searchInput = document.getElementById('search-input');
         const clearSearchBtn = document.getElementById('clear-search');
         const shopsGrid = document.getElementById('shops-grid');
         const resultsCountEl = document.getElementById('results-count');
         const refreshBtn = document.getElementById('refresh-btn');
+        const liveSyncToggle = document.getElementById('live-sync-toggle');
+        const liveSyncLabel = document.getElementById('live-sync-label');
         const statShopsCount = document.getElementById('stat-shops-count');
         const statItemsCount = document.getElementById('stat-items-count');
         const filterPills = document.querySelectorAll('.pill');
@@ -785,6 +789,17 @@
             const itemId = String(material || '').toLowerCase().replace(/^minecraft:/, '').replace(/[^a-z0-9_]/g, '');
             const iconUrl = `https://project-crafting.github.io/minecraft-auto-updated-textures-api/items/${itemId}.png`;
             return `<img class="${className}" src="${escapeHtml(iconUrl)}" alt="${escapeHtml(displayName)} icon" loading="lazy" onerror="this.hidden=true">`;
+        }
+
+        function fallbackOwnerAvatar(image, playerId) {
+            if (!image.dataset.avatarFallback) {
+                image.dataset.avatarFallback = '1';
+                image.src = `https://mc-heads.net/avatar/${playerId}/40`;
+                return;
+            }
+
+            image.onerror = null;
+            image.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><rect width='40' height='40' fill='%23282f44'/><text x='20' y='25' font-size='18' text-anchor='middle' fill='%239aa5be'>👤</text></svg>";
         }
 
         // Filter and Render
@@ -886,8 +901,8 @@
                         <div class="card-header">
                             <div class="shop-title-area">
                                 <img
-                                    src="https://mc-heads.net/avatar/${shop.owner_uuid || shop.owner_name}/40"
-                                    onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'40\\' height=\\'40\\' viewBox=\\'0 0 40 40\\'><rect width=\\'40\\' height=\\'40\\' fill=\\'%23282f44\\'/><text x=\\'20\\' y=\\'25\\' font-size=\\'18\\' text-anchor=\\'middle\\' fill=\\'%239aa5be\\'>👤</text></svg>'"
+                                    src="https://crafatar.imc.moe/avatars/${encodeURIComponent(shop.owner_uuid || '')}?size=40&overlay"
+                                    onerror="fallbackOwnerAvatar(this, '${encodeURIComponent(shop.owner_uuid || '')}')"
                                     alt="${escapeHtml(shop.owner_name)}"
                                     class="owner-avatar"
                                 >
@@ -922,7 +937,7 @@
                 ? `${effectivePricing.price_amount} ${formatPriceUnit(effectivePricing.price_unit)} / ${effectivePricing.sell_amount} ${effectivePricing.sell_unit}`
                 : '';
             const effectivePriceBadge = effectivePricing
-                ? `<span class="effective-price">${escapeHtml(effectivePriceText)}${effectivePricing.fair_market_floor_applied ? '<span class="fair-market-tag">Fair market floor</span>' : ''}</span>`
+                ? `<span class="effective-price">${escapeHtml(effectivePriceText)}</span>`
                 : '';
             if (listing.is_shulker) {
                 const deepMatchBadge = listing.deepMatch
@@ -1032,6 +1047,23 @@
             showToast('Refreshed shop inventory!');
         });
 
+        function updateLiveSyncToggle() {
+            liveSyncToggle.setAttribute('aria-pressed', String(liveRefreshEnabled));
+            liveSyncLabel.textContent = `Live Sync: ${liveRefreshEnabled ? 'On' : 'Paused'}`;
+            liveSyncToggle.title = liveRefreshEnabled ? 'Pause automatic refresh' : 'Resume automatic refresh';
+            if (liveRefreshEnabled) {
+                liveRefreshTimer = setInterval(fetchShops, 30000);
+            } else if (liveRefreshTimer !== null) {
+                clearInterval(liveRefreshTimer);
+                liveRefreshTimer = null;
+            }
+        }
+
+        liveSyncToggle.addEventListener('click', () => {
+            liveRefreshEnabled = !liveRefreshEnabled;
+            updateLiveSyncToggle();
+        });
+
         filterPills.forEach(pill => {
             pill.addEventListener('click', () => {
                 filterPills.forEach(p => p.classList.remove('active'));
@@ -1041,9 +1073,9 @@
             });
         });
 
-        // Initialize & Auto-sync every 30s
+        // Initialize the listing and auto-sync every 30s.
         fetchShops();
-        setInterval(fetchShops, 30000);
+        updateLiveSyncToggle();
     </script>
 </body>
 </html>
