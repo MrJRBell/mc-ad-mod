@@ -340,62 +340,6 @@
             color: var(--text-secondary);
         }
 
-        .price-badge {
-            background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(192, 132, 252, 0.15));
-            border: 1px solid rgba(56, 189, 248, 0.35);
-            padding: 6px 12px;
-            border-radius: 10px;
-            box-sizing: border-box;
-            flex: 1 1 100%;
-            width: 100%;
-            max-width: 100%;
-            min-width: 0;
-            text-align: left;
-            white-space: normal;
-            overflow-wrap: anywhere;
-        }
-
-        .price-summary {
-            display: grid;
-            gap: 4px;
-            max-height: 120px;
-            margin-top: 4px;
-            overflow-y: auto;
-        }
-
-        .price-summary-row {
-            display: flex;
-            align-items: baseline;
-            justify-content: space-between;
-            gap: 10px;
-            font-size: 0.75rem;
-        }
-
-        .price-summary-name {
-            min-width: 0;
-            overflow-wrap: anywhere;
-        }
-
-        .price-summary-price {
-            flex: 0 0 auto;
-            text-align: right;
-        }
-
-        .price-title {
-            font-size: 0.68rem;
-            text-transform: uppercase;
-            font-weight: 700;
-            color: var(--accent-cyan);
-            letter-spacing: 0.05em;
-        }
-
-        .price-value {
-            font-size: 0.88rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
         .location-bar {
             display: flex;
             align-items: center;
@@ -481,6 +425,23 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            min-width: 0;
+        }
+
+        .item-icon {
+            width: 28px;
+            height: 28px;
+            flex: 0 0 auto;
+            object-fit: contain;
+            image-rendering: pixelated;
+        }
+
+        .inner-item-icon {
+            width: 20px;
+            height: 20px;
+            flex: 0 0 auto;
+            object-fit: contain;
+            image-rendering: pixelated;
         }
 
         .item-name {
@@ -530,13 +491,18 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            min-width: 0;
             font-weight: 600;
             font-size: 0.88rem;
             color: #d8b4fe;
         }
 
         .shulker-icon {
-            font-size: 16px;
+            width: 24px;
+            height: 24px;
+            flex: 0 0 auto;
+            object-fit: contain;
+            image-rendering: pixelated;
         }
 
         .shulker-tag {
@@ -602,7 +568,7 @@
             padding: 6px 8px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 6px;
             font-size: 0.78rem;
         }
 
@@ -815,6 +781,12 @@
             return formatItemName(rawUnit);
         }
 
+        function renderItemIcon(material, displayName, className) {
+            const itemId = String(material || '').toLowerCase().replace(/^minecraft:/, '').replace(/[^a-z0-9_]/g, '');
+            const iconUrl = `https://project-crafting.github.io/minecraft-auto-updated-textures-api/items/${itemId}.png`;
+            return `<img class="${className}" src="${escapeHtml(iconUrl)}" alt="${escapeHtml(displayName)} icon" loading="lazy" onerror="this.hidden=true">`;
+        }
+
         // Filter and Render
         function renderShops() {
             const query = searchQuery.trim().toLowerCase();
@@ -924,10 +896,6 @@
                                     <div class="shop-owner">by <strong>${escapeHtml(shop.owner_name)}</strong></div>
                                 </div>
                             </div>
-                            <div class="price-badge">
-                                <div class="price-title">Advertised prices</div>
-                                <div class="price-summary">${renderPriceSummary(shop.filteredListings)}</div>
-                            </div>
                         </div>
 
                         <div class="location-bar">
@@ -945,36 +913,6 @@
                         </div>
                     </div>
                 `;
-            }).join('');
-        }
-
-        function renderPriceSummary(listings) {
-            const rows = [];
-            (listings || []).forEach(listing => {
-                const listingName = listing.display_name || formatItemName(listing.item_type);
-                if (listing.effective_pricing) {
-                    rows.push({ name: listingName, pricing: listing.effective_pricing });
-                }
-                if (listing.is_shulker && listing.shulker_contents) {
-                    listing.shulker_contents.forEach(content => {
-                        if (content.effective_pricing) {
-                            rows.push({
-                                name: content.display_name || formatItemName(content.item),
-                                pricing: content.effective_pricing
-                            });
-                        }
-                    });
-                }
-            });
-
-            if (rows.length === 0) {
-                return '<div class="price-summary-row">No priced items currently in stock</div>';
-            }
-
-            return rows.map(({ name, pricing }) => {
-                const price = `${pricing.price_amount} ${formatPriceUnit(pricing.price_unit)} / ${pricing.sell_amount} ${pricing.sell_unit}`;
-                const floorTag = pricing.fair_market_floor_applied ? ' <span class="fair-market-tag">Fair market floor</span>' : '';
-                return `<div class="price-summary-row"><span class="price-summary-name">${escapeHtml(name)}</span><span class="price-summary-price">${escapeHtml(price)}${floorTag}</span></div>`;
             }).join('');
         }
 
@@ -997,7 +935,7 @@
                     <div class="shulker-container ${listing.deepMatch ? 'matched' : ''} ${shouldAutoOpen ? 'open' : ''}">
                         <div class="shulker-header" onclick="this.parentElement.classList.toggle('open')">
                             <div class="shulker-title">
-                                <span class="shulker-icon">🔮</span>
+                                ${renderItemIcon(listing.item_type, listing.display_name || formatItemName(listing.item_type), 'shulker-icon')}
                                 <span>${escapeHtml(listing.display_name || formatItemName(listing.item_type))}</span>
                                 <span class="shulker-tag">${listing.quantity_available} Box${listing.quantity_available > 1 ? 'es' : ''}</span>
                                 ${effectivePriceBadge}
@@ -1010,10 +948,6 @@
                             <div class="shulker-items-list">
                                 ${listing.shulker_contents ? listing.shulker_contents.map(inner => {
                                     const innerFormatted = formatItemName(inner.item);
-                                    const innerPricing = inner.effective_pricing;
-                                    const innerPriceText = innerPricing
-                                        ? `${innerPricing.price_amount} ${formatPriceUnit(innerPricing.price_unit)} / ${innerPricing.sell_amount} ${innerPricing.sell_unit}`
-                                        : '';
                                     const isInnerMatch = query && (
                                         innerFormatted.toLowerCase().includes(query) ||
                                         inner.item.toLowerCase().includes(query) ||
@@ -1021,11 +955,11 @@
                                     );
                                     return `
                                         <div class="shulker-inner-item ${isInnerMatch ? 'item-highlight' : ''}">
+                                            ${renderItemIcon(inner.item, inner.display_name || innerFormatted, 'inner-item-icon')}
                                             <span class="inner-item-name" title="${escapeHtml(inner.display_name || innerFormatted)}">
                                                 ${escapeHtml(inner.display_name || innerFormatted)}
                                             </span>
                                             <span class="inner-item-count">×${inner.count}</span>
-                                            ${innerPricing ? `<span class="effective-price">${escapeHtml(innerPriceText)}${innerPricing.fair_market_floor_applied ? '<span class="fair-market-tag">Fair market floor</span>' : ''}</span>` : ''}
                                         </div>
                                     `;
                                 }).join('') : '<div style="color:var(--text-muted); font-size:0.8rem;">Empty Shulker Box</div>'}
@@ -1042,7 +976,7 @@
                 return `
                     <div class="regular-item-badge ${isMatched ? 'matched' : ''}">
                         <div class="item-info">
-                            <span>📦</span>
+                            ${renderItemIcon(listing.item_type, listing.display_name || formatItemName(listing.item_type), 'item-icon')}
                             <span class="item-name">${escapeHtml(listing.display_name || formatItemName(listing.item_type))}</span>
                         </div>
                         <span class="item-qty">Stock: ${listing.quantity_available}</span>

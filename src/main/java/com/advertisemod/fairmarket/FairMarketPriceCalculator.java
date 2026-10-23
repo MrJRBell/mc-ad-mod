@@ -124,6 +124,14 @@ public final class FairMarketPriceCalculator {
             contents.add(content.withEffectivePricing(
                     effectivePricing(content.getItem(), barrel, priceLookup)));
         }
+        if (listing.isShulker() && !contents.isEmpty()) {
+            long packagePrice = pricing.getPriceAmount();
+            for (ShulkerContent content : contents) {
+                packagePrice = Math.max(packagePrice, content.getEffectivePricing().getPriceAmount());
+            }
+            pricing = new EffectivePricing(packagePrice, barrel.getPriceUnit(), barrel.getSellAmount(),
+                    barrel.getSellUnit(), packagePrice > barrel.getPriceAmount());
+        }
         return listing.withEffectivePricing(pricing, contents);
     }
 
