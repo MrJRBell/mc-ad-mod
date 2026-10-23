@@ -208,6 +208,8 @@ Stock Syncing & Lifecycle Events:
 
 - Server: Embedded com.sun.net.httpserver.HttpServer listening on web_server.port (default: 8080).
 - CORS Support: Headers must include 'Access-Control-Allow-Origin: *'.
+- Serve the default web page directly from the plugin JAR so plugin updates always deliver the current page. Remove the legacy extracted `plugins/AdvertiseMod/web/index.html` cache at startup.
+- Support an optional custom page at `plugins/AdvertiseMod/web/override.html`; this file takes precedence over the bundled page and is preserved across updates.
 
 Endpoints:
 1. GET /api/shops: Returns JSON array of all active shop barrels, individual listings, and deep-scanned Shulker contents.

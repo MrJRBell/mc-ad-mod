@@ -146,8 +146,8 @@ public class WebServer {
     }
 
     private byte[] loadIndexHtml() {
-        // First, check if custom index.html exists in plugin data folder
-        File customFile = new File(plugin.getDataFolder(), "web/index.html");
+        // An explicit override is optional; otherwise serve the current page bundled in this JAR.
+        File customFile = new File(plugin.getDataFolder(), "web/override.html");
         if (customFile.exists()) {
             try {
                 return Files.readAllBytes(customFile.toPath());

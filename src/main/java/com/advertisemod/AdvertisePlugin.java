@@ -13,6 +13,8 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,8 +43,8 @@ public class AdvertisePlugin extends JavaPlugin {
         this.configManager = new ConfigManager(this);
         this.fairMarketPriceManager = new FairMarketPriceManager(this);
 
-        // 2. Extract default web assets if not present
-        extractWebAssets();
+        // 2. Remove the old extracted default page; the bundled resource is served directly.
+        removeLegacyWebCache();
 
         // 3. Initialize SQLite database
         this.databaseManager = new DatabaseManager(this);
@@ -99,20 +101,15 @@ public class AdvertisePlugin extends JavaPlugin {
         getLogger().info("AdvertiseMod disabled cleanly.");
     }
 
-    private void extractWebAssets() {
-        File webDir = new File(getDataFolder(), "web");
-        if (!webDir.exists()) {
-            //noinspection ResultOfMethodCallIgnored
-            webDir.mkdirs();
-        }
-
-        File indexFile = new File(webDir, "index.html");
-        if (!indexFile.exists()) {
-            try {
-                saveResource("web/index.html", false);
-            } catch (Throwable ignored) {
-                // Ignore if resource extraction throws or is already present
+    private void removeLegacyWebCache() {
+        File legacyIndex = new File(getDataFolder(), "web/index.html");
+        try {
+            if (Files.deleteIfExists(legacyIndex.toPath())) {
+                getLogger().info("Removed legacy web/index.html cache; bundled web page will be used. "
+                        + "Use web/override.html for a custom page.");
             }
+        } catch (IOException e) {
+            getLogger().warning("Could not remove legacy web/index.html cache: " + e.getMessage());
         }
     }
 

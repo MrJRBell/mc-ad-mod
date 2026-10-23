@@ -346,12 +346,39 @@
             padding: 6px 12px;
             border-radius: 10px;
             box-sizing: border-box;
+            flex: 1 1 100%;
             width: 100%;
             max-width: 100%;
             min-width: 0;
-            text-align: right;
+            text-align: left;
             white-space: normal;
             overflow-wrap: anywhere;
+        }
+
+        .price-summary {
+            display: grid;
+            gap: 4px;
+            max-height: 120px;
+            margin-top: 4px;
+            overflow-y: auto;
+        }
+
+        .price-summary-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 0.75rem;
+        }
+
+        .price-summary-name {
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .price-summary-price {
+            flex: 0 0 auto;
+            text-align: right;
         }
 
         .price-title {
@@ -897,10 +924,10 @@
                                     <div class="shop-owner">by <strong>${escapeHtml(shop.owner_name)}</strong></div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="price-badge">
-                            <div class="price-title">Item prices include fair market floors</div>
+                            <div class="price-badge">
+                                <div class="price-title">Advertised prices</div>
+                                <div class="price-summary">${renderPriceSummary(shop.filteredListings)}</div>
+                            </div>
                         </div>
 
                         <div class="location-bar">
@@ -918,6 +945,36 @@
                         </div>
                     </div>
                 `;
+            }).join('');
+        }
+
+        function renderPriceSummary(listings) {
+            const rows = [];
+            (listings || []).forEach(listing => {
+                const listingName = listing.display_name || formatItemName(listing.item_type);
+                if (listing.effective_pricing) {
+                    rows.push({ name: listingName, pricing: listing.effective_pricing });
+                }
+                if (listing.is_shulker && listing.shulker_contents) {
+                    listing.shulker_contents.forEach(content => {
+                        if (content.effective_pricing) {
+                            rows.push({
+                                name: content.display_name || formatItemName(content.item),
+                                pricing: content.effective_pricing
+                            });
+                        }
+                    });
+                }
+            });
+
+            if (rows.length === 0) {
+                return '<div class="price-summary-row">No priced items currently in stock</div>';
+            }
+
+            return rows.map(({ name, pricing }) => {
+                const price = `${pricing.price_amount} ${formatPriceUnit(pricing.price_unit)} / ${pricing.sell_amount} ${pricing.sell_unit}`;
+                const floorTag = pricing.fair_market_floor_applied ? ' <span class="fair-market-tag">Fair market floor</span>' : '';
+                return `<div class="price-summary-row"><span class="price-summary-name">${escapeHtml(name)}</span><span class="price-summary-price">${escapeHtml(price)}${floorTag}</span></div>`;
             }).join('');
         }
 
