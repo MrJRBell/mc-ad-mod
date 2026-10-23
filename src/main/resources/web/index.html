@@ -787,14 +787,24 @@
 
         function renderItemIcon(material, displayName, className) {
             const itemId = String(material || '').toLowerCase().replace(/^minecraft:/, '').replace(/[^a-z0-9_]/g, '');
-            const iconUrl = `https://project-crafting.github.io/minecraft-auto-updated-textures-api/items/${itemId}.png`;
+            const shulkerColor = itemId.match(/^(white|orange|magenta|light_blue|yellow|lime|pink|gray|light_gray|cyan|purple|blue|brown|green|red|black)_shulker_box$/)?.[1];
+            const isDefaultShulker = itemId === 'shulker_box';
+            const wikiColor = shulkerColor
+                ? shulkerColor.split('_').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('_')
+                : '';
+            const wikiFileName = isDefaultShulker
+                ? 'Invicon_Shulker_Box.png'
+                : `Invicon_${wikiColor ? `${wikiColor}_` : ''}Shulker_Box.png`;
+            const iconUrl = isDefaultShulker || shulkerColor
+                ? `https://minecraft.wiki/Special:FilePath/${wikiFileName}`
+                : `https://project-crafting.github.io/minecraft-auto-updated-textures-api/items/${itemId}.png`;
             return `<img class="${className}" src="${escapeHtml(iconUrl)}" alt="${escapeHtml(displayName)} icon" loading="lazy" onerror="this.hidden=true">`;
         }
 
         function fallbackOwnerAvatar(image, playerId) {
             if (!image.dataset.avatarFallback) {
                 image.dataset.avatarFallback = '1';
-                image.src = `https://mc-heads.net/avatar/${playerId}/40`;
+                image.src = `https://crafatar.imc.moe/avatars/${playerId}?size=40&overlay`;
                 return;
             }
 
@@ -877,9 +887,23 @@
             });
 
             // Update UI count
-            resultsCountEl.textContent = `Showing ${matchedShops.length} shop${matchedShops.length === 1 ? '' : 's'} (${totalMatchingListings} listing${totalMatchingListings === 1 ? '' : 's'})`;
+            const groupedShops = new Map();
+            matchedShops.forEach(shop => {
+                const shopName = (shop.shop_name || 'Shopping Barrel').trim();
+                const ownerKey = (shop.owner_uuid || shop.owner_name || '').toLowerCase();
+                const groupKey = JSON.stringify([ownerKey, shopName.toLowerCase()]);
+                if (!groupedShops.has(groupKey)) {
+                    groupedShops.set(groupKey, { ...shop, shop_name: shopName, barrels: [], hasDeepMatch: false });
+                }
+                const group = groupedShops.get(groupKey);
+                group.barrels.push(shop);
+                group.hasDeepMatch = group.hasDeepMatch || shop.hasDeepMatch;
+            });
+            const shopGroups = Array.from(groupedShops.values());
 
-            if (matchedShops.length === 0) {
+            resultsCountEl.textContent = `Showing ${shopGroups.length} shop${shopGroups.length === 1 ? '' : 's'} (${totalMatchingListings} listing${totalMatchingListings === 1 ? '' : 's'})`;
+
+            if (shopGroups.length === 0) {
                 shopsGrid.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">🔎</div>
@@ -891,17 +915,13 @@
             }
 
             // Render cards
-            shopsGrid.innerHTML = matchedShops.map(shop => {
-                const loc = shop.location || { world: 'world', x: 0, y: 0, z: 0 };
-                const coordsText = `${loc.world} (${loc.x}, ${loc.y}, ${loc.z})`;
-                const tpCommand = `/tp ${loc.x} ${loc.y} ${loc.z}`;
-
+            shopsGrid.innerHTML = shopGroups.map(shop => {
                 return `
                     <div class="shop-card ${shop.hasDeepMatch ? 'has-match' : ''}">
                         <div class="card-header">
                             <div class="shop-title-area">
                                 <img
-                                    src="https://crafatar.imc.moe/avatars/${encodeURIComponent(shop.owner_uuid || '')}?size=40&overlay"
+                                    src="https://mc-heads.net/avatar/${encodeURIComponent(shop.owner_name || '')}/40"
                                     onerror="fallbackOwnerAvatar(this, '${encodeURIComponent(shop.owner_uuid || '')}')"
                                     alt="${escapeHtml(shop.owner_name)}"
                                     class="owner-avatar"
@@ -913,18 +933,22 @@
                             </div>
                         </div>
 
-                        <div class="location-bar">
-                            <span>📍 ${escapeHtml(coordsText)}</span>
-                            <button class="btn-copy-coords" onclick="copyToClipboard('${escapeHtml(tpCommand)}')">
-                                Copy /tp
-                            </button>
-                        </div>
-
                         <div class="listings-section">
                             <div class="listings-heading">Available Inventory</div>
-                            <div class="listing-items">
-                                ${shop.filteredListings.map(item => renderListingItem(item, query)).join('')}
-                            </div>
+                            ${shop.barrels.map(barrel => {
+                                const loc = barrel.location || { world: 'world', x: 0, y: 0, z: 0 };
+                                const coordsText = `${loc.world} (${loc.x}, ${loc.y}, ${loc.z})`;
+                                const tpCommand = `/tp ${loc.x} ${loc.y} ${loc.z}`;
+                                return `
+                                    <div class="location-bar">
+                                        <span>📍 ${escapeHtml(coordsText)}</span>
+                                        <button class="btn-copy-coords" onclick="copyToClipboard('${escapeHtml(tpCommand)}')">Copy /tp</button>
+                                    </div>
+                                    <div class="listing-items">
+                                        ${barrel.filteredListings.map(item => renderListingItem(item, query)).join('')}
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 `;
