@@ -151,6 +151,14 @@ public class DatabaseManager {
             ps.setString(13, barrel.getSellUnit());
             ps.executeUpdate();
         }
+
+        // A player's avatar belongs to their shop identity, so refresh it for every barrel they own.
+        String updateOwnerSkinSql = "UPDATE registered_barrels SET owner_skin_texture = ? WHERE owner_uuid = ?";
+        try (PreparedStatement ps = getConnection().prepareStatement(updateOwnerSkinSql)) {
+            ps.setString(1, barrel.getOwnerSkinTexture());
+            ps.setString(2, barrel.getOwnerUuid().toString());
+            ps.executeUpdate();
+        }
     }
 
     /**
